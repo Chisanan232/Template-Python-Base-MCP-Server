@@ -6,12 +6,11 @@ and webhook functionality.
 
 from __future__ import annotations
 
-from .app import WebServerFactory, web_factory, web, create_app, mount_service
+from .app import WebServerFactory, web_factory, create_app, mount_service
 
 __all__ = [
     "WebServerFactory",
     "web_factory",
-    "web",
     "create_app",
     "mount_service",
 ]
