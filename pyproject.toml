@@ -26,8 +26,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/Chisanan232/Template-Python-UV-Project"
-Repository = "https://github.com/Chisanan232/Template-Python-UV-Project"
+Homepage = "https://github.com/Chisanan232/Template-Python-Base-MCP-Server"
+Repository = "https://github.com/Chisanan232/Template-Python-Base-MCP-Server"
 
 [dependency-groups]
 dev = [
