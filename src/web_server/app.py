@@ -54,7 +54,7 @@ from .._base import BaseServerFactory
 from ..mcp.app import mcp_factory
 from ..config import get_settings
 from ..models.cli import MCPTransportType, ServerConfig
-from ..models.dto.health_check import HealthyCheckResponseDto
+from .models.dto.health_check import HealthyCheckResponseDto
 
 _WEB_SERVER_INSTANCE: Optional[FastAPI] = None
 

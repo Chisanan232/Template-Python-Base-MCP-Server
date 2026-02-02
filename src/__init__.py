@@ -41,7 +41,6 @@ from __future__ import annotations
 # Re-export commonly used components for convenience
 from .config import get_settings, Settings
 from .models.cli import ServerConfig, LogLevel, MCPTransportType
-from .models.dto.health_check import HealthyCheckResponseDto
 
 __version__ = "0.0.0"
 __author__ = "Template Author"
@@ -55,5 +54,4 @@ __all__ = [
     "ServerConfig",
     "LogLevel",
     "MCPTransportType",
-    "HealthyCheckResponseDto",
 ]
