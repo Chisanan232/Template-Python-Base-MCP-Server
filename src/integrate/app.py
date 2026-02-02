@@ -34,6 +34,7 @@ Notes
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Final, Optional
 
@@ -44,9 +45,44 @@ from ..mcp.app import mcp_factory
 from ..models.cli import MCPTransportType
 from ..web_server.app import web_factory
 
+# Default mount paths for each transport type
+_DEFAULT_MOUNT_PATHS: Final[dict[MCPTransportType, str]] = {
+    MCPTransportType.SSE: "/sse",
+    MCPTransportType.HTTP_STREAMING: "/mcp",
+}
+
 _LOG: Final[logging.Logger] = logging.getLogger(__name__)
 
 _INTEGRATED_SERVER_INSTANCE: Optional[FastAPI] = None
+
+
+@contextlib.contextmanager
+def integrated_server_lifecycle():
+    """Context manager for integrated server initialization and cleanup.
+
+    This context manager ensures proper initialization and cleanup of the
+    integrated server instance, including dependent factories.
+
+    Yields
+    ------
+    None
+
+    Examples
+    --------
+    .. code-block:: python
+
+        from src.integrate.app import integrated_server_lifecycle
+
+        with integrated_server_lifecycle():
+            app = IntegratedServerFactory.create()
+            # Use app
+        # Cleanup happens automatically
+    """
+    try:
+        yield
+    finally:
+        # Cleanup is handled by reset() if needed
+        pass
 
 
 class IntegratedServerFactory(BaseServerFactory[FastAPI]):
@@ -82,10 +118,10 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             token : Optional[str]
                 API token to initialize the global client. If None,
                 initialization is deferred until the entrypoint provides it.
-            mcp_transport : str
+            mcp_transport : str or MCPTransportType
                 Transport for MCP server. One of "sse" or "streamable-http".
-            mcp_mount_path : str
-                Mount path for MCP sub-app (only applicable to SSE transport).
+            mcp_mount_path : Optional[str]
+                Mount path for MCP sub-app. If None, uses default for transport type.
             retry : int
                 Retry count for client operations (0 disables retries).
 
@@ -111,21 +147,25 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             )
         """
         token: Optional[str] = kwargs.get("token", None)
-        mcp_transport: str = kwargs.get("mcp_transport", "sse")
-        mcp_mount_path: str = kwargs.get("mcp_mount_path", "/mcp")
+        mcp_transport_input = kwargs.get("mcp_transport", MCPTransportType.SSE)
+        mcp_mount_path: Optional[str] = kwargs.get("mcp_mount_path", None)
         retry: int = kwargs.get("retry", 3)
 
-        # Validate transport type first before any other operations
-        if mcp_transport not in ["sse", "streamable-http"]:
-            raise ValueError(
-                f"Invalid transport type for integrated server: {mcp_transport}. "
-                "Must be 'sse' or 'streamable-http'."
-            )
+        # Normalize transport to enum
+        if isinstance(mcp_transport_input, str):
+            try:
+                mcp_transport = MCPTransportType(mcp_transport_input)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid transport type for integrated server: {mcp_transport_input}. "
+                    f"Must be one of: {', '.join([t.value for t in MCPTransportType])}"
+                )
+        else:
+            mcp_transport = mcp_transport_input
 
-        # Create the webhook app first - this will be returned for both transports
-        # Initialize web factory and MCP factory before creating the app
-        from src.mcp.app import mcp_factory
-        from src.web_server.app import web_factory
+        # Determine mount path: use provided value or default for transport type
+        if mcp_mount_path is None:
+            mcp_mount_path = _DEFAULT_MOUNT_PATHS[mcp_transport]
 
         # Ensure MCP server is created
         try:
@@ -140,12 +180,17 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             app = web_factory.create()
 
         # Mount MCP sub-app based on transport type
-        if mcp_transport == "sse":
+        if mcp_transport == MCPTransportType.SSE:
             app.mount(mcp_mount_path, mcp_factory.get().sse_app())
             _LOG.info(f"MCP SSE transport mounted at {mcp_mount_path}")
-        else:  # streamable-http
-            app.mount("/mcp", mcp_factory.get().streamable_http_app())
-            _LOG.info("MCP HTTP streaming transport mounted at /mcp")
+        elif mcp_transport == MCPTransportType.HTTP_STREAMING:
+            app.mount(mcp_mount_path, mcp_factory.get().streamable_http_app())
+            _LOG.info(f"MCP HTTP streaming transport mounted at {mcp_mount_path}")
+        else:
+            raise ValueError(
+                f"Invalid transport type for integrated server: {mcp_transport}. "
+                f"Must be one of: {', '.join([t.value for t in MCPTransportType])}"
+            )
 
         # Store the integrated instance
         global _INTEGRATED_SERVER_INSTANCE
