@@ -313,6 +313,55 @@ def create_server_config(args: argparse.Namespace) -> ServerConfig:
         sys.exit(1)
 
 
+def initialize_server_environment(config: ServerConfig) -> Optional[object]:
+    """Initialize common server environment and settings.
+
+    This function handles shared initialization logic for both standalone
+    and integrated server modes, including logging configuration and
+    settings loading.
+
+    Parameters
+    ----------
+    config : ServerConfig
+        Server configuration
+
+    Returns
+    -------
+    Optional[object]
+        Settings object if initialization succeeds, None otherwise
+
+    Examples
+    --------
+    .. code-block:: python
+
+        from src.models.cli import ServerConfig
+        from src.entry import initialize_server_environment
+
+        config = ServerConfig(transport="sse")
+        settings = initialize_server_environment(config)
+        if settings is None:
+            return  # Initialization failed
+    """
+    # Configure logging
+    configure_logging(config.log_level)
+
+    # Initialize settings
+    settings_kwargs = {}
+    if config.token:
+        settings_kwargs["api_token"] = config.token
+
+    try:
+        settings = get_settings(
+            env_file=config.env_file,
+            no_env_file=config.env_file is None,
+            **settings_kwargs,
+        )
+        return settings
+    except Exception as e:
+        _LOG.error(f"Failed to load configuration: {e}")
+        return None
+
+
 def run_standalone_server(config: ServerConfig) -> None:
     """Run the MCP server in standalone mode.
 
@@ -334,22 +383,9 @@ def run_standalone_server(config: ServerConfig) -> None:
         config = ServerConfig(transport="sse")
         run_standalone_server(config)
     """
-    # Configure logging
-    configure_logging(config.log_level)
-
-    # Initialize settings
-    settings_kwargs = {}
-    if config.token:
-        settings_kwargs["api_token"] = config.token
-
-    try:
-        settings = get_settings(
-            env_file=config.env_file,
-            no_env_file=config.env_file is None,
-            **settings_kwargs,
-        )
-    except Exception as e:
-        _LOG.error(f"Failed to load configuration: {e}")
+    # Initialize environment
+    settings = initialize_server_environment(config)
+    if settings is None:
         return
 
     # Create MCP server
@@ -400,22 +436,9 @@ def run_integrated_server(config: ServerConfig) -> None:
         config = ServerConfig(transport="sse")
         run_integrated_server(config)
     """
-    # Configure logging
-    configure_logging(config.log_level)
-
-    # Initialize settings
-    settings_kwargs = {}
-    if config.token:
-        settings_kwargs["api_token"] = config.token
-
-    try:
-        settings = get_settings(
-            env_file=config.env_file,
-            no_env_file=config.env_file is None,
-            **settings_kwargs,
-        )
-    except Exception as e:
-        _LOG.error(f"Failed to load configuration: {e}")
+    # Initialize environment
+    settings = initialize_server_environment(config)
+    if settings is None:
         return
 
     # Create integrated server
