@@ -309,7 +309,7 @@ wheels = [
 
 [[package]]
 name = "mcp-server-template"
-version = "0.0.3"
+version = "0.0.0"
 source = { editable = "." }
 
 [package.dev-dependencies]
