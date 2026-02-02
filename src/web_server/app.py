@@ -185,7 +185,6 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 
 
 web_factory = WebServerFactory
-web = web_factory.create()
 
 
 def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
