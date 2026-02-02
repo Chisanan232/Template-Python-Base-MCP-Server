@@ -27,7 +27,14 @@
 /docs/                                <your GitHub name>
 *.md                                  <your GitHub name>
 *.mdx                                 <your GitHub name>
+*.js                                  <your GitHub name>
 *.ts                                  <your GitHub name>
+*.tsx                                 <your GitHub name>
+*.css                                 <your GitHub name>
+*.html                                <your GitHub name>
+*.json                                <your GitHub name>
+*.yml                                 <your GitHub name>
+*.yaml                                <your GitHub name>
 
 #######################################
 # CI/CD Configuration
