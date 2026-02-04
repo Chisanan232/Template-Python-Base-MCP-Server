@@ -121,8 +121,7 @@ from __future__ import annotations
 from .cli import LogLevel, MCPTransportType, ServerConfig
 
 __all__ = [
-    # CLI models
-    "ServerConfig",
     "LogLevel",
     "MCPTransportType",
+    "ServerConfig",
 ]

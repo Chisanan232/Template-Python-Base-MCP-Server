@@ -56,7 +56,7 @@ class ServerConfig(BaseModel):
     model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     host: str = Field(
-        default="0.0.0.0",
+        default="127.0.0.1",
         description="Host to bind the server to",
     )
     port: int = Field(

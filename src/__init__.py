@@ -133,11 +133,9 @@ __author__ = "Template Author"
 __email__ = "template@example.com"
 
 __all__ = [
-    # Configuration
-    "get_settings",
-    "Settings",
-    # Models
-    "ServerConfig",
     "LogLevel",
     "MCPTransportType",
+    "ServerConfig",
+    "Settings",
+    "get_settings",
 ]

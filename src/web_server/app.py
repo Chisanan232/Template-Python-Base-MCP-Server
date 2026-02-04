@@ -84,7 +84,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
     """
 
     @staticmethod
-    def create(**kwargs) -> FastAPI:
+    def create(**kwargs: object) -> FastAPI:
         """Create and configure the web API server singleton instance.
 
         This method creates a new FastAPI application with the following features:
@@ -218,8 +218,9 @@ def mount_service(transport: str | MCPTransportType = "sse") -> None:
     if isinstance(transport, str):
         try:
             transport_enum = MCPTransportType(transport)
-        except ValueError:
-            raise ValueError(f"Unknown transport protocol: {transport}")
+        except ValueError as err:
+            error_msg = f"Unknown transport protocol: {transport}"
+            raise ValueError(error_msg) from err
     else:
         transport_enum = transport
 

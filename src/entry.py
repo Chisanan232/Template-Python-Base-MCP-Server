@@ -164,7 +164,7 @@ Examples:
     parser.add_argument(
         "--host",
         type=str,
-        default="0.0.0.0",
+        default="127.0.0.1",
         help="Host to bind the server to (default: 0.0.0.0)",
     )
     parser.add_argument(
@@ -261,7 +261,8 @@ def configure_logging(log_level: str) -> None:
     """
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {log_level}")
+        error_msg = f"Invalid log level: {log_level}"
+        raise ValueError(error_msg)
 
     # Configure logging
     logging.basicConfig(
@@ -346,18 +347,17 @@ def initialize_server_environment(config: ServerConfig) -> Settings | None:
     configure_logging(config.log_level)
 
     # Initialize settings
-    settings_kwargs = {}
+    settings_kwargs: dict[str, object] = {}
     if config.token:
         settings_kwargs["api_token"] = config.token
 
     try:
-        settings = get_settings(
+        return get_settings(
             env_file=config.env_file,
             no_env_file=config.env_file is None,
             force_reload=False,
             **settings_kwargs,
         )
-        return settings
     except Exception as e:
         _LOG.error(f"Failed to load configuration: {e}")
         return None
@@ -468,7 +468,7 @@ def run_integrated_server(config: ServerConfig) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Main entry point for the Template MCP Server.
+    """Run the Template MCP Server main entry point.
 
     This function serves as the primary entry point when running the server
     from the command line. It:

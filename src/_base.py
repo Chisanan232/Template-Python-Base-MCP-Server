@@ -8,12 +8,12 @@ retrieving, and resetting server instances.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 ServerType = TypeVar("ServerType")
 
 
-class BaseServerFactory(ABC, Generic[ServerType]):
+class BaseServerFactory[ServerType](ABC):
     """Abstract base class for server factories.
 
     This class provides the foundation for implementing server factories that
@@ -81,7 +81,7 @@ class BaseServerFactory(ABC, Generic[ServerType]):
 
     @staticmethod
     @abstractmethod
-    def create(**kwargs) -> ServerType:
+    def create(**kwargs: object) -> ServerType:
         """Create and configure a new server instance.
 
         This method must implement singleton pattern enforcement to ensure

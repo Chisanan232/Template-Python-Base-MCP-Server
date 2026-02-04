@@ -24,7 +24,7 @@ class TestParseArgs:
         """Test parsing default arguments."""
         args = parse_args([])
 
-        assert args.host == "0.0.0.0"
+        assert args.host == "0.0.0.0"  # noqa: S104
         assert args.port == 8000
         assert args.log_level == "info"
         assert args.reload is False
@@ -110,7 +110,7 @@ class TestCreateServerConfig:
         config = create_server_config(args)
 
         assert isinstance(config, ServerConfig)
-        assert config.host == "0.0.0.0"
+        assert config.host == "0.0.0.0"  # noqa: S104
         assert config.port == 8000
         assert config.log_level == LogLevel.INFO
         assert config.transport == MCPTransportType.SSE

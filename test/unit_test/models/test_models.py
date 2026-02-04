@@ -14,7 +14,7 @@ class TestServerConfig:
         """Test default configuration values."""
         config = ServerConfig()
 
-        assert config.host == "0.0.0.0"
+        assert config.host == "0.0.0.0"  # noqa: S104
         assert config.port == 8000
         assert config.log_level == LogLevel.INFO
         assert config.reload is False

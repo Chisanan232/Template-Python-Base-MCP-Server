@@ -37,7 +37,8 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from typing import Final
+from collections.abc import Generator
+from typing import Final, cast
 
 from fastapi import FastAPI
 
@@ -58,7 +59,7 @@ _INTEGRATED_SERVER_INSTANCE: FastAPI | None = None
 
 
 @contextlib.contextmanager
-def integrated_server_lifecycle():
+def integrated_server_lifecycle() -> Generator[None, None, None]:
     """Context manager for integrated server initialization and cleanup.
 
     This context manager ensures proper initialization and cleanup of the
@@ -112,7 +113,7 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
     """
 
     @staticmethod
-    def create(**kwargs) -> FastAPI:
+    def create(**kwargs: object) -> FastAPI:
         """Create and configure the integrated FastAPI server.
 
         Parameters
@@ -150,22 +151,25 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             )
 
         """
-        token: str | None = kwargs.get("token")
-        mcp_transport_input = kwargs.get("mcp_transport", MCPTransportType.SSE)
-        mcp_mount_path: str | None = kwargs.get("mcp_mount_path")
-        retry: int = kwargs.get("retry", 3)
+        token: str | None = cast(str | None, kwargs.get("token"))
+        mcp_transport_input: str | MCPTransportType = cast(
+            str | MCPTransportType, kwargs.get("mcp_transport", MCPTransportType.SSE)
+        )
+        mcp_mount_path: str | None = cast(str | None, kwargs.get("mcp_mount_path"))
+        retry: int = cast(int, kwargs.get("retry", 3))
 
         # Normalize transport to enum
         if isinstance(mcp_transport_input, str):
             try:
                 mcp_transport = MCPTransportType(mcp_transport_input)
-            except ValueError:
-                raise ValueError(
+            except ValueError as err:
+                error_msg = (
                     f"Invalid transport type for integrated server: {mcp_transport_input}. "
                     f"Must be one of: {', '.join([t.value for t in MCPTransportType])}"
                 )
+                raise ValueError(error_msg) from err
         else:
-            mcp_transport = mcp_transport_input
+            mcp_transport = cast(MCPTransportType, mcp_transport_input)
 
         # Determine mount path: use provided value or default for transport type
         if mcp_mount_path is None:
@@ -191,10 +195,11 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             app.mount(mcp_mount_path, mcp_factory.get().streamable_http_app())
             _LOG.info(f"MCP HTTP streaming transport mounted at {mcp_mount_path}")
         else:
-            raise ValueError(
+            error_msg = (
                 f"Invalid transport type for integrated server: {mcp_transport}. "
                 f"Must be one of: {', '.join([t.value for t in MCPTransportType])}"
             )
+            raise ValueError(error_msg)
 
         # Store the integrated instance
         global _INTEGRATED_SERVER_INSTANCE

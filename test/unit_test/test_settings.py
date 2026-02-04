@@ -16,7 +16,7 @@ class TestSettings:
         """Test default settings values."""
         settings = Settings()
 
-        assert settings.host == "0.0.0.0"
+        assert settings.host == "0.0.0.0"  # noqa: S104
         assert settings.port == 8000
         assert settings.log_level == "info"
         assert settings.transport == "sse"

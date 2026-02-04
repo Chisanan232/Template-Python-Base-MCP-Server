@@ -363,7 +363,8 @@ class TestIntegratedServerLifecycle:
         """Test that lifecycle context manager handles exceptions."""
         try:
             with integrated_server_lifecycle():
-                raise ValueError("Test error")
+                error_msg = "Test error"
+                raise ValueError(error_msg)
         except ValueError:
             pass  # Expected
 

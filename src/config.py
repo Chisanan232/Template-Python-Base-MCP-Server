@@ -127,7 +127,7 @@ class Settings(BaseSettings):
         alias="LOG_LEVEL",
     )
     host: str = Field(
-        default="0.0.0.0",
+        default="127.0.0.1",
         description="Server host address",
         alias="HOST",
     )
@@ -211,7 +211,7 @@ class Settings(BaseSettings):
         """
         return cls(_env_file=str(env_file))
 
-    def model_dump_json(self, **kwargs) -> str:
+    def model_dump_json(self, **kwargs: object) -> str:
         """Export settings as JSON, excluding sensitive fields.
 
         Parameters
@@ -243,7 +243,7 @@ def get_settings(
     env_file: str | Path | None = None,
     no_env_file: bool = False,
     force_reload: bool = False,
-    **kwargs,
+    **kwargs: object,
 ) -> Settings:
     """Get the application settings instance.
 
@@ -290,7 +290,7 @@ def get_settings(
         return _settings_instance
 
     # Prepare configuration arguments
-    config_kwargs = {}
+    config_kwargs: dict[str, object] = {}
 
     # Handle .env file configuration
     if not no_env_file:
@@ -300,7 +300,8 @@ def get_settings(
             config_kwargs["_env_file"] = ".env"
 
     # Add any override parameters
-    config_kwargs.update(kwargs)
+    if kwargs:
+        config_kwargs.update(dict(kwargs))
 
     # Create new settings instance
     _settings_instance = Settings(**config_kwargs)

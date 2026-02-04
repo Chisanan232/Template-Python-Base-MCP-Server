@@ -71,7 +71,7 @@ Transport Types
 from __future__ import annotations
 
 import contextlib
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from typing import Final
 
 from fastapi import FastAPI
@@ -118,7 +118,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
     """
 
     @staticmethod
-    def create(**kwargs) -> FastMCP:
+    def create(**kwargs: object) -> FastMCP:
         """Create and configure the MCP server.
 
         Creates a new FastMCP instance with the server name "TemplateMCPServer".
@@ -253,11 +253,12 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
         """
         try:
             _mcp_server = MCPServerFactory.get()
-        except AssertionError:
-            raise AssertionError("Please create a FastMCP instance first by calling *MCPServerFactory.create()*.")
+        except AssertionError as err:
+            error_msg = "Please create a FastMCP instance first by calling *MCPServerFactory.create()*."
+            raise AssertionError(error_msg) from err
 
         @contextlib.asynccontextmanager
-        async def lifespan(_: FastAPI):
+        async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
             # Initialize transport apps before accessing session_manager
             # This ensures the session manager is properly created
             _mcp_server.sse_app()
