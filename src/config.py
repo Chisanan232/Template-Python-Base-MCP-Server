@@ -57,7 +57,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypedDict, Unpack
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -65,6 +65,34 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Type aliases for better readability
 LogLevel = Literal["debug", "info", "warning", "error", "critical"]
 TransportType = Literal["sse", "http-streaming"]
+
+
+class ModelDumpJsonKwargs(TypedDict, total=False):
+    """TypedDict for Settings.model_dump_json() keyword arguments."""
+
+    include: set[str] | dict[str, set[str] | bool] | None
+    exclude: set[str] | dict[str, set[str] | bool] | None
+    context: dict[str, object] | None
+    by_alias: bool
+    exclude_unset: bool
+    exclude_defaults: bool
+    exclude_none: bool
+    round_trip: bool
+    warnings: bool | str
+
+
+class GetSettingsKwargs(TypedDict, total=False):
+    """TypedDict for get_settings() keyword arguments."""
+
+    api_token: str | None
+    host: str
+    port: int
+    log_level: LogLevel
+    transport: TransportType
+    cors_allow_origins: list[str]
+    cors_allow_credentials: bool
+    cors_allow_methods: list[str]
+    cors_allow_headers: list[str]
 
 
 class Settings(BaseSettings):
@@ -211,7 +239,7 @@ class Settings(BaseSettings):
         """
         return cls(_env_file=str(env_file))
 
-    def model_dump_json(self, **kwargs: object) -> str:
+    def model_dump_json(self, **kwargs: Unpack[ModelDumpJsonKwargs]) -> str:
         """Export settings as JSON, excluding sensitive fields.
 
         Parameters
@@ -243,7 +271,7 @@ def get_settings(
     env_file: str | Path | None = None,
     no_env_file: bool = False,
     force_reload: bool = False,
-    **kwargs: object,
+    **kwargs: Unpack[GetSettingsKwargs],
 ) -> Settings:
     """Get the application settings instance.
 

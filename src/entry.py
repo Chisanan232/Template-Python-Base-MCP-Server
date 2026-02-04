@@ -110,7 +110,7 @@ import sys
 import uvicorn
 from pydantic import ValidationError
 
-from .config import Settings, get_settings
+from .config import GetSettingsKwargs, Settings, get_settings
 from .integrate.app import integrated_factory
 from .mcp.app import mcp_factory
 from .models.cli import LogLevel, MCPTransportType, ServerConfig
@@ -347,7 +347,7 @@ def initialize_server_environment(config: ServerConfig) -> Settings | None:
     configure_logging(config.log_level)
 
     # Initialize settings
-    settings_kwargs: dict[str, object] = {}
+    settings_kwargs: GetSettingsKwargs = {}
     if config.token:
         settings_kwargs["api_token"] = config.token
 

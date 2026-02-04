@@ -72,7 +72,7 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import AsyncGenerator, Callable
-from typing import Final
+from typing import Final, TypedDict, Unpack
 
 from fastapi import FastAPI
 from mcp.server import FastMCP
@@ -82,6 +82,12 @@ from .._base import BaseServerFactory
 SERVER_NAME: Final[str] = "TemplateMCPServer"
 
 _MCP_SERVER_INSTANCE: FastMCP | None = None
+
+
+class MCPServerKwargs(TypedDict, total=False):
+    """TypedDict for MCPServerFactory.create() keyword arguments."""
+
+    pass
 
 
 class MCPServerFactory(BaseServerFactory[FastMCP]):
@@ -118,7 +124,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
     """
 
     @staticmethod
-    def create(**kwargs: object) -> FastMCP:
+    def create(**kwargs: Unpack[MCPServerKwargs]) -> FastMCP:
         """Create and configure the MCP server.
 
         Creates a new FastMCP instance with the server name "TemplateMCPServer".

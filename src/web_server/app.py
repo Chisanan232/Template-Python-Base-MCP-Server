@@ -44,6 +44,8 @@ High-level flow (sequence):
 
 from __future__ import annotations
 
+from typing import TypedDict, Unpack
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -54,6 +56,12 @@ from ..models.cli import MCPTransportType, ServerConfig
 from .models.response.health_check import HealthyCheckResponseDto
 
 _WEB_SERVER_INSTANCE: FastAPI | None = None
+
+
+class WebServerKwargs(TypedDict, total=False):
+    """TypedDict for WebServerFactory.create() keyword arguments."""
+
+    pass
 
 
 class WebServerFactory(BaseServerFactory[FastAPI]):
@@ -84,7 +92,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
     """
 
     @staticmethod
-    def create(**kwargs: object) -> FastAPI:
+    def create(**kwargs: Unpack[WebServerKwargs]) -> FastAPI:
         """Create and configure the web API server singleton instance.
 
         This method creates a new FastAPI application with the following features:

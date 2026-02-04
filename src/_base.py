@@ -8,9 +8,15 @@ retrieving, and resetting server instances.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TypeVar
+from typing import TypedDict, TypeVar, Unpack
 
 ServerType = TypeVar("ServerType")
+
+
+class ServerKwargs(TypedDict, total=False):
+    """Base TypedDict for server factory keyword arguments."""
+
+    pass
 
 
 class BaseServerFactory[ServerType](ABC):
@@ -81,7 +87,7 @@ class BaseServerFactory[ServerType](ABC):
 
     @staticmethod
     @abstractmethod
-    def create(**kwargs: object) -> ServerType:
+    def create(**kwargs: Unpack[ServerKwargs]) -> ServerType:
         """Create and configure a new server instance.
 
         This method must implement singleton pattern enforcement to ensure

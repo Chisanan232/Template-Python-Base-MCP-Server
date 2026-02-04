@@ -38,7 +38,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from collections.abc import Generator
-from typing import Final, cast
+from typing import Final, TypedDict, Unpack
 
 from fastapi import FastAPI
 
@@ -52,6 +52,15 @@ _DEFAULT_MOUNT_PATHS: Final[dict[MCPTransportType, str]] = {
     MCPTransportType.SSE: "/sse",
     MCPTransportType.HTTP_STREAMING: "/mcp",
 }
+
+
+class IntegratedServerKwargs(TypedDict, total=False):
+    """TypedDict for IntegratedServerFactory.create() keyword arguments."""
+
+    token: str | None
+    mcp_transport: str | MCPTransportType
+    mcp_mount_path: str | None
+    retry: int
 
 _LOG: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -113,7 +122,7 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
     """
 
     @staticmethod
-    def create(**kwargs: object) -> FastAPI:
+    def create(**kwargs: Unpack[IntegratedServerKwargs]) -> FastAPI:
         """Create and configure the integrated FastAPI server.
 
         Parameters
@@ -151,12 +160,10 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             )
 
         """
-        token: str | None = cast(str | None, kwargs.get("token"))
-        mcp_transport_input: str | MCPTransportType = cast(
-            str | MCPTransportType, kwargs.get("mcp_transport", MCPTransportType.SSE)
-        )
-        mcp_mount_path: str | None = cast(str | None, kwargs.get("mcp_mount_path"))
-        retry: int = cast(int, kwargs.get("retry", 3))
+        token: str | None = kwargs.get("token")
+        mcp_transport_input: str | MCPTransportType = kwargs.get("mcp_transport", MCPTransportType.SSE)
+        mcp_mount_path: str | None = kwargs.get("mcp_mount_path")
+        retry: int = kwargs.get("retry", 3)
 
         # Normalize transport to enum
         if isinstance(mcp_transport_input, str):
@@ -169,7 +176,7 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
                 )
                 raise ValueError(error_msg) from err
         else:
-            mcp_transport = cast(MCPTransportType, mcp_transport_input)
+            mcp_transport = mcp_transport_input
 
         # Determine mount path: use provided value or default for transport type
         if mcp_mount_path is None:
