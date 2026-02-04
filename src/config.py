@@ -67,20 +67,6 @@ LogLevel = Literal["debug", "info", "warning", "error", "critical"]
 TransportType = Literal["sse", "http-streaming"]
 
 
-class ModelDumpJsonKwargs(TypedDict, total=False):
-    """TypedDict for Settings.model_dump_json() keyword arguments."""
-
-    include: set[str] | dict[str, set[str] | bool] | None
-    exclude: set[str] | dict[str, set[str] | bool] | None
-    context: dict[str, object] | None
-    by_alias: bool
-    exclude_unset: bool
-    exclude_defaults: bool
-    exclude_none: bool
-    round_trip: bool
-    warnings: bool | str
-
-
 class GetSettingsKwargs(TypedDict, total=False):
     """TypedDict for get_settings() keyword arguments."""
 
@@ -239,31 +225,7 @@ class Settings(BaseSettings):
         """
         return cls(_env_file=str(env_file))
 
-    def model_dump_json(self, **kwargs: Unpack[ModelDumpJsonKwargs]) -> str:
-        """Export settings as JSON, excluding sensitive fields.
-
-        Parameters
-        ----------
-        **kwargs
-            Additional arguments passed to model_dump_json
-
-        Returns
-        -------
-        str
-            JSON representation of settings (sensitive fields excluded)
-
-        Examples
-        --------
-        .. code-block:: python
-
-            settings = get_settings()
-            json_str = settings.model_dump_json(exclude={"api_token"})
-
-        """
-        return super().model_dump_json(exclude={"api_token"}, **kwargs)
-
-
-# Global settings instance cache
+    # Global settings instance cache
 _settings_instance: Settings | None = None
 
 
