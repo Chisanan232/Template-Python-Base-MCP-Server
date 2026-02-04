@@ -227,7 +227,7 @@ class TestWebService:
         with pytest.raises(ValueError, match="Unknown transport protocol"):
             from src.web_server.app import mount_service
 
-            mount_service("invalid_transport")
+            mount_service("invalid_transport")  # This will raise ValueError for invalid transport
 
     @patch("src.web_server.app.mount_service")
     @patch("src.web_server.app.web_factory")

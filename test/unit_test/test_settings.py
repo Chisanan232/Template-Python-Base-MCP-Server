@@ -34,6 +34,7 @@ class TestSettings:
 
         settings = Settings()
 
+        assert settings.api_token is not None
         assert settings.api_token.get_secret_value() == "test_token"
         assert settings.host == "127.0.0.1"
         assert settings.port == 9000
@@ -57,6 +58,7 @@ TRANSPORT=http-streaming
         try:
             settings = Settings.from_env_file(env_file_path)
 
+            assert settings.api_token is not None
             assert settings.api_token.get_secret_value() == "env_file_token"
             assert settings.host == "192.168.1.1"
             assert settings.port == 8080
@@ -128,6 +130,7 @@ HOST=custom_host
         try:
             settings = get_settings(env_file=env_file_path)
 
+            assert settings.api_token is not None
             assert settings.api_token.get_secret_value() == "custom_token"
             assert settings.host == "custom_host"
         finally:

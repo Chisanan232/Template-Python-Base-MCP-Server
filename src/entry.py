@@ -110,7 +110,7 @@ import sys
 import uvicorn
 from pydantic import ValidationError
 
-from .config import get_settings
+from .config import Settings, get_settings
 from .integrate.app import integrated_factory
 from .mcp.app import mcp_factory
 from .models.cli import LogLevel, MCPTransportType, ServerConfig
@@ -312,7 +312,7 @@ def create_server_config(args: argparse.Namespace) -> ServerConfig:
         sys.exit(1)
 
 
-def initialize_server_environment(config: ServerConfig) -> object | None:
+def initialize_server_environment(config: ServerConfig) -> Settings | None:
     """Initialize common server environment and settings.
 
     This function handles shared initialization logic for both standalone
@@ -354,6 +354,7 @@ def initialize_server_environment(config: ServerConfig) -> object | None:
         settings = get_settings(
             env_file=config.env_file,
             no_env_file=config.env_file is None,
+            force_reload=False,
             **settings_kwargs,
         )
         return settings

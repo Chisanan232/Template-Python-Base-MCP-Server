@@ -182,7 +182,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 web_factory = WebServerFactory
 
 
-def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
+def mount_service(transport: str | MCPTransportType = "sse") -> None:
     """Mount the MCP service into the FastAPI web server.
 
     This function mounts the Model Context Protocol (MCP) server as a sub-application
@@ -214,13 +214,20 @@ def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
         curl http://localhost:8000/mcp
 
     """
-    match transport:
+    # Convert string to enum if needed
+    if isinstance(transport, str):
+        try:
+            transport_enum = MCPTransportType(transport)
+        except ValueError:
+            raise ValueError(f"Unknown transport protocol: {transport}")
+    else:
+        transport_enum = transport
+
+    match transport_enum:
         case MCPTransportType.SSE:
             web_factory.get().mount("/sse", mcp_factory.get().sse_app())
         case MCPTransportType.HTTP_STREAMING:
             web_factory.get().mount("/mcp", mcp_factory.get().streamable_http_app())
-        case _:
-            raise ValueError(f"Unknown transport protocol: {transport}")
 
 
 def create_app(

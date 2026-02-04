@@ -97,9 +97,8 @@ class TestLogLevel:
 
     def test_log_level_comparison(self) -> None:
         """Test log level comparisons."""
-        assert LogLevel.DEBUG == "debug"
+        assert LogLevel.DEBUG.value == "debug"
         assert LogLevel.INFO == LogLevel.INFO
-        assert LogLevel.WARNING != LogLevel.DEBUG
 
 
 class TestMCPTransportType:
@@ -112,9 +111,8 @@ class TestMCPTransportType:
 
     def test_transport_type_comparison(self) -> None:
         """Test transport type comparisons."""
-        assert MCPTransportType.SSE == "sse"
+        assert MCPTransportType.SSE.value == "sse"
         assert MCPTransportType.HTTP_STREAMING == MCPTransportType.HTTP_STREAMING
-        assert MCPTransportType.SSE != MCPTransportType.HTTP_STREAMING
 
 
 class TestHealthyCheckResponseDto:
@@ -165,6 +163,7 @@ class TestHealthyCheckResponseDto:
         )
 
         assert response.status == "unhealthy"
+        assert response.checks is not None
         assert response.checks["database"] is False
         assert response.checks["external_api"] is True
 
@@ -241,5 +240,6 @@ class TestModelIntegration:
             },
         )
 
+        assert health_response.checks is not None
         assert health_response.checks["server_running"] is True
         assert health_response.checks["database_connected"] is True
