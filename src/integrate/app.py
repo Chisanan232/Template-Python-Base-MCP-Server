@@ -62,6 +62,7 @@ class IntegratedServerKwargs(TypedDict, total=False):
     mcp_mount_path: str | None
     retry: int
 
+
 _LOG: Final[logging.Logger] = logging.getLogger(__name__)
 
 _INTEGRATED_SERVER_INSTANCE: FastAPI | None = None

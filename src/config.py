@@ -226,6 +226,8 @@ class Settings(BaseSettings):
         return cls(_env_file=str(env_file))
 
     # Global settings instance cache
+
+
 _settings_instance: Settings | None = None
 
 

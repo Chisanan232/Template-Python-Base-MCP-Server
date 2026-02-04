@@ -260,3 +260,8 @@ force-single-line = false
     "ANN001",  # missing type annotation
     "ANN201",  # missing return type annotation
 ]
+
+# Type definitions module - allow module name shadowing
+"src/types.py" = [
+    "A005",  # module name shadowing
+]
