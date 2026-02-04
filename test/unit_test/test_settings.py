@@ -2,7 +2,6 @@
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -16,7 +15,7 @@ class TestSettings:
     def test_default_settings(self) -> None:
         """Test default settings values."""
         settings = Settings()
-        
+
         assert settings.host == "0.0.0.0"
         assert settings.port == 8000
         assert settings.log_level == "info"
@@ -32,9 +31,9 @@ class TestSettings:
         monkeypatch.setenv("PORT", "9000")
         monkeypatch.setenv("LOG_LEVEL", "debug")
         monkeypatch.setenv("TRANSPORT", "http-streaming")
-        
+
         settings = Settings()
-        
+
         assert settings.api_token.get_secret_value() == "test_token"
         assert settings.host == "127.0.0.1"
         assert settings.port == 9000
@@ -50,14 +49,14 @@ PORT=8080
 LOG_LEVEL=warning
 TRANSPORT=http-streaming
 """
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
             f.write(env_content.strip())
             env_file_path = f.name
-        
+
         try:
             settings = Settings.from_env_file(env_file_path)
-            
+
             assert settings.api_token.get_secret_value() == "env_file_token"
             assert settings.host == "192.168.1.1"
             assert settings.port == 8080
@@ -80,7 +79,7 @@ TRANSPORT=http-streaming
         token = settings.get_api_token()
         # get_api_token returns the string value
         assert isinstance(token, str) or token is None
-        
+
         # Test without token
         settings = Settings(api_token=None)
         assert settings.get_api_token() is None
@@ -89,7 +88,7 @@ TRANSPORT=http-streaming
         """Test that sensitive fields are excluded from JSON export."""
         settings = Settings(api_token="secret_token")
         json_str = settings.model_dump_json()
-        
+
         assert "secret_token" not in json_str
         assert "api_token" not in json_str
 
@@ -105,14 +104,14 @@ class TestGetSettings:
         """Test that get_settings returns the same instance."""
         settings1 = get_settings()
         settings2 = get_settings()
-        
+
         assert settings1 is settings2
 
     def test_get_settings_force_reload(self) -> None:
         """Test force_reload parameter."""
         settings1 = get_settings()
         settings2 = get_settings(force_reload=True)
-        
+
         assert settings1 is not settings2
 
     def test_get_settings_with_env_file(self) -> None:
@@ -121,14 +120,14 @@ class TestGetSettings:
 API_TOKEN=custom_token
 HOST=custom_host
 """
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
             f.write(env_content.strip())
             env_file_path = f.name
-        
+
         try:
             settings = get_settings(env_file=env_file_path)
-            
+
             assert settings.api_token.get_secret_value() == "custom_token"
             assert settings.host == "custom_host"
         finally:
@@ -139,10 +138,10 @@ HOST=custom_host
         """Test get_settings with parameter overrides."""
         # Reset settings first
         reset_settings()
-        
+
         # Get settings with port override
         settings = get_settings(port=9999)
-        
+
         # Verify port override works
         assert settings.port == 9999
 
@@ -150,18 +149,18 @@ HOST=custom_host
         """Test get_settings with no_env_file=True."""
         # Create a .env file that should be ignored
         env_content = "API_TOKEN=should_be_ignored"
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
             f.write(env_content.strip())
             env_file_path = f.name
-        
+
         try:
             # Change to the directory with the .env file
             original_cwd = os.getcwd()
             os.chdir(os.path.dirname(env_file_path))
-            
+
             settings = get_settings(no_env_file=True)
-            
+
             assert settings.api_token is None
         finally:
             os.chdir(original_cwd)
@@ -172,5 +171,5 @@ HOST=custom_host
         settings1 = get_settings()
         reset_settings()
         settings2 = get_settings(force_reload=True)
-        
+
         assert settings1 is not settings2

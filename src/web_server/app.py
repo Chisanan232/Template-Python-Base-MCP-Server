@@ -44,24 +44,20 @@ High-level flow (sequence):
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from .._base import BaseServerFactory
-from ..mcp.app import mcp_factory
 from ..config import get_settings
+from ..mcp.app import mcp_factory
 from ..models.cli import MCPTransportType, ServerConfig
 from .models.response.health_check import HealthyCheckResponseDto
 
-_WEB_SERVER_INSTANCE: Optional[FastAPI] = None
+_WEB_SERVER_INSTANCE: FastAPI | None = None
 
 
 class WebServerFactory(BaseServerFactory[FastAPI]):
-    """
-    Factory for creating and managing FastAPI web server instances.
+    """Factory for creating and managing FastAPI web server instances.
 
     This factory implements the singleton pattern to ensure only one
     FastAPI server instance exists throughout the application lifecycle.
@@ -89,8 +85,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 
     @staticmethod
     def create(**kwargs) -> FastAPI:
-        """
-        Create and configure the web API server singleton instance.
+        """Create and configure the web API server singleton instance.
 
         This method creates a new FastAPI application with the following features:
         - CORS middleware configured for all origins (adjust for production)
@@ -110,11 +105,12 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
         Usage Examples:
             # Python - Create the web server
             server = WebServerFactory.create()
+
         """
         # Create a new FastAPI instance
         global _WEB_SERVER_INSTANCE
         assert _WEB_SERVER_INSTANCE is None, "It is not allowed to create more than one instance of web server."
-        
+
         # Create FastAPI app
         _WEB_SERVER_INSTANCE = FastAPI(
             title="Template MCP Server",
@@ -145,8 +141,7 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
 
     @staticmethod
     def get() -> FastAPI:
-        """
-        Get the existing FastAPI web server singleton instance.
+        """Get the existing FastAPI web server singleton instance.
 
         Returns the previously created server instance. Raises an assertion
         error if no server has been created yet. Use create() to initialize
@@ -162,14 +157,14 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             # Python - Get existing server
             server = WebServerFactory.get()
             # Server is ready to use
+
         """
         assert _WEB_SERVER_INSTANCE is not None, "It must be created web server first."
         return _WEB_SERVER_INSTANCE
 
     @staticmethod
     def reset() -> None:
-        """
-        Reset the singleton instance to None.
+        """Reset the singleton instance to None.
 
         This method clears the cached server instance, allowing a new one
         to be created. Primarily used for testing and in scenarios where
@@ -188,8 +183,7 @@ web_factory = WebServerFactory
 
 
 def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
-    """
-    Mount the MCP service into the FastAPI web server.
+    """Mount the MCP service into the FastAPI web server.
 
     This function mounts the Model Context Protocol (MCP) server as a sub-application
     on the FastAPI server, enabling MCP clients to communicate with external APIs
@@ -218,6 +212,7 @@ def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
 
         # curl - Access MCP via HTTP streaming
         curl http://localhost:8000/mcp
+
     """
     match transport:
         case MCPTransportType.SSE:
@@ -231,8 +226,7 @@ def mount_service(transport: MCPTransportType = MCPTransportType.SSE) -> None:
 def create_app(
     server_config: ServerConfig | None = None,
 ) -> FastAPI:
-    """
-    Create and configure the FastAPI application with MCP server mounted.
+    """Create and configure the FastAPI application with MCP server mounted.
 
     This function is the main entry point for initializing the Template MCP server.
     It performs the following initialization steps:
@@ -280,6 +274,7 @@ def create_app(
 
         # CLI - Run with custom settings
         python -m src.entry --host 0.0.0.0 --port 8080 --transport sse
+
     """
     # Create the web server if it doesn't exist
     try:

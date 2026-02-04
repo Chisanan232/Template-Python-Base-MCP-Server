@@ -1,10 +1,11 @@
 """Test MCP server factory functionality."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from src._base import BaseServerFactory
-from src.mcp.app import MCPServerFactory, mcp_factory, _MCP_SERVER_INSTANCE
+from src.mcp.app import MCPServerFactory, mcp_factory
 
 
 class TestMCPServerFactory:
@@ -24,7 +25,7 @@ class TestMCPServerFactory:
         server1 = MCPServerFactory.create()
         assert server1 is not None
         assert server1.name == "TemplateMCPServer"
-        
+
         # Try to create second instance - should raise AssertionError
         with pytest.raises(AssertionError, match="not allowed to create more than one instance"):
             MCPServerFactory.create()
@@ -33,10 +34,10 @@ class TestMCPServerFactory:
         """Test successful get() after create()."""
         # Create server first
         server = MCPServerFactory.create()
-        
+
         # Get the server
         retrieved_server = MCPServerFactory.get()
-        
+
         assert retrieved_server is server
 
     def test_get_without_create(self) -> None:
@@ -48,10 +49,10 @@ class TestMCPServerFactory:
         """Test reset() functionality."""
         # Create server
         server1 = MCPServerFactory.create()
-        
+
         # Reset
         MCPServerFactory.reset()
-        
+
         # Should be able to create again
         server2 = MCPServerFactory.create()
         assert server2 is not server1
@@ -65,10 +66,10 @@ class TestMCPServerFactory:
         """Test successful lifespan() after create()."""
         # Create server
         server = MCPServerFactory.create()
-        
+
         # Get lifespan
         lifespan_func = MCPServerFactory.lifespan()
-        
+
         # Should be callable
         assert callable(lifespan_func)
 
@@ -94,20 +95,20 @@ class TestMcpFactoryInstance:
         """Test getting server through mcp_factory."""
         # Create through factory
         server1 = mcp_factory.create()
-        
+
         # Get through factory
         server2 = mcp_factory.get()
-        
+
         assert server1 is server2
 
     def test_mcp_factory_reset(self) -> None:
         """Test resetting through mcp_factory."""
         # Create server
         server1 = mcp_factory.create()
-        
+
         # Reset
         mcp_factory.reset()
-        
+
         # Should be able to create again
         server2 = mcp_factory.create()
         assert server2 is not server1
@@ -124,12 +125,12 @@ class TestMcpServerIntegration:
         """Test that tools can be registered on the server."""
         # Create server
         server = mcp_factory.create()
-        
+
         # Register a test tool
         @server.tool("test_tool")
         async def test_tool(param: str) -> dict:
             return {"result": param}
-        
+
         # Verify the tool was registered (this is a basic test)
         # In a real scenario, you might want to check the internal registry
         assert callable(test_tool)
@@ -138,23 +139,23 @@ class TestMcpServerIntegration:
         """Test that transport apps can be created."""
         # Create server
         server = mcp_factory.create()
-        
+
         # Create SSE app
         sse_app = server.sse_app()
         assert sse_app is not None
-        
+
         # Create HTTP streaming app
         http_app = server.streamable_http_app()
         assert http_app is not None
 
-    @patch('src.mcp.app.FastMCP.run')
+    @patch("src.mcp.app.FastMCP.run")
     def test_server_stdio_run(self, mock_run: MagicMock) -> None:
         """Test running server with stdio transport."""
         # Create server
         server = mcp_factory.create()
-        
+
         # Run with stdio transport
         server.run(transport="stdio")
-        
+
         # Verify run was called
         mock_run.assert_called_once_with(transport="stdio")

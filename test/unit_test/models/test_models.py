@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.models.cli import ServerConfig, LogLevel, MCPTransportType
+from src.models.cli import LogLevel, MCPTransportType, ServerConfig
 from src.web_server.models.response.health_check import HealthyCheckResponseDto
 
 
@@ -13,7 +13,7 @@ class TestServerConfig:
     def test_default_values(self) -> None:
         """Test default configuration values."""
         config = ServerConfig()
-        
+
         assert config.host == "0.0.0.0"
         assert config.port == 8000
         assert config.log_level == LogLevel.INFO
@@ -31,9 +31,9 @@ class TestServerConfig:
             reload=True,
             env_file="/custom/.env",
             token="test_token",
-            transport=MCPTransportType.HTTP_STREAMING
+            transport=MCPTransportType.HTTP_STREAMING,
         )
-        
+
         assert config.host == "127.0.0.1"
         assert config.port == 9000
         assert config.log_level == LogLevel.DEBUG
@@ -47,24 +47,21 @@ class TestServerConfig:
         # Valid ports
         config = ServerConfig(port=1)
         assert config.port == 1
-        
+
         config = ServerConfig(port=65535)
         assert config.port == 65535
-        
+
         # Invalid ports
         with pytest.raises(ValidationError):
             ServerConfig(port=0)
-        
+
         with pytest.raises(ValidationError):
             ServerConfig(port=65536)
 
     def test_string_values(self) -> None:
         """Test configuration with string enum values."""
-        config = ServerConfig(
-            log_level="debug",
-            transport="http-streaming"
-        )
-        
+        config = ServerConfig(log_level="debug", transport="http-streaming")
+
         assert config.log_level == LogLevel.DEBUG
         assert config.transport == MCPTransportType.HTTP_STREAMING
 
@@ -76,14 +73,11 @@ class TestServerConfig:
     def test_model_dump(self) -> None:
         """Test model serialization."""
         config = ServerConfig(
-            host="127.0.0.1",
-            port=9000,
-            log_level=LogLevel.DEBUG,
-            transport=MCPTransportType.HTTP_STREAMING
+            host="127.0.0.1", port=9000, log_level=LogLevel.DEBUG, transport=MCPTransportType.HTTP_STREAMING
         )
-        
+
         data = config.model_dump()
-        
+
         assert data["host"] == "127.0.0.1"
         assert data["port"] == 9000
         assert data["log_level"] == "debug"
@@ -129,7 +123,7 @@ class TestHealthyCheckResponseDto:
     def test_default_values(self) -> None:
         """Test default health check response values."""
         response = HealthyCheckResponseDto()
-        
+
         assert response.status == "healthy"
         assert response.timestamp is None
         assert response.version is None
@@ -147,9 +141,9 @@ class TestHealthyCheckResponseDto:
                 "database": True,
                 "external_api": True,
                 "mcp_server": True,
-            }
+            },
         )
-        
+
         assert response.status == "healthy"
         assert response.timestamp == "2024-01-01T12:00:00Z"
         assert response.version == "0.1.0"
@@ -167,9 +161,9 @@ class TestHealthyCheckResponseDto:
             checks={
                 "database": False,
                 "external_api": True,
-            }
+            },
         )
-        
+
         assert response.status == "unhealthy"
         assert response.checks["database"] is False
         assert response.checks["external_api"] is True
@@ -179,10 +173,10 @@ class TestHealthyCheckResponseDto:
         # Valid status
         response = HealthyCheckResponseDto(status="healthy")
         assert response.status == "healthy"
-        
+
         response = HealthyCheckResponseDto(status="unhealthy")
         assert response.status == "unhealthy"
-        
+
         # Invalid status would be caught by Pydantic validation
         # but since it's a Literal type, it should be validated at runtime
 
@@ -193,11 +187,11 @@ class TestHealthyCheckResponseDto:
             timestamp="2024-01-01T12:00:00Z",
             version="0.1.0",
             uptime_seconds=3600.0,
-            checks={"database": True}
+            checks={"database": True},
         )
-        
+
         data = response.model_dump()
-        
+
         assert data["status"] == "healthy"
         assert data["timestamp"] == "2024-01-01T12:00:00Z"
         assert data["version"] == "0.1.0"
@@ -206,13 +200,10 @@ class TestHealthyCheckResponseDto:
 
     def test_json_serialization(self) -> None:
         """Test JSON serialization."""
-        response = HealthyCheckResponseDto(
-            status="healthy",
-            version="0.1.0"
-        )
-        
+        response = HealthyCheckResponseDto(status="healthy", version="0.1.0")
+
         json_str = response.model_dump_json()
-        
+
         assert "healthy" in json_str
         assert "0.1.0" in json_str
 
@@ -227,15 +218,12 @@ class TestModelIntegration:
 
     def test_server_config_with_enums(self) -> None:
         """Test ServerConfig with enum values."""
-        config = ServerConfig(
-            log_level=LogLevel.DEBUG,
-            transport=MCPTransportType.HTTP_STREAMING
-        )
-        
+        config = ServerConfig(log_level=LogLevel.DEBUG, transport=MCPTransportType.HTTP_STREAMING)
+
         # Test that enums work correctly
         assert config.log_level == LogLevel.DEBUG
         assert config.transport == MCPTransportType.HTTP_STREAMING
-        
+
         # Test string conversion
         assert str(config.log_level) == "debug"
         assert str(config.transport) == "http-streaming"
@@ -243,15 +231,15 @@ class TestModelIntegration:
     def test_health_check_response_with_server_config(self) -> None:
         """Test using HealthyCheckResponseDto with ServerConfig."""
         config = ServerConfig(port=8000, transport=MCPTransportType.SSE)
-        
+
         # HealthyCheckResponseDto expects checks to be a dict with boolean values
         health_response = HealthyCheckResponseDto(
             status="healthy",
             checks={
                 "server_running": True,
                 "database_connected": True,
-            }
+            },
         )
-        
+
         assert health_response.checks["server_running"] is True
         assert health_response.checks["database_connected"] is True

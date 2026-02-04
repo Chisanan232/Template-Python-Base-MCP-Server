@@ -106,7 +106,6 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import Optional
 
 import uvicorn
 from pydantic import ValidationError
@@ -119,7 +118,7 @@ from .models.cli import LogLevel, MCPTransportType, ServerConfig
 _LOG = logging.getLogger(__name__)
 
 
-def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments.
 
     This function parses CLI arguments and returns them as a namespace object.
@@ -145,6 +144,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
 
         # Parse custom arguments
         args = parse_args(["--transport", "sse", "--port", "8000"])
+
     """
     parser = argparse.ArgumentParser(
         description="Run the Template MCP Server",
@@ -257,6 +257,7 @@ def configure_logging(log_level: str) -> None:
 
         # Configure error logging
         configure_logging("error")
+
     """
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
@@ -297,14 +298,12 @@ def create_server_config(args: argparse.Namespace) -> ServerConfig:
 
         args = parse_args(["--host", "0.0.0.0", "--port", "8000"])
         config = create_server_config(args)
+
     """
     args_dict = vars(args)
-    
+
     # Remove arguments that are not part of ServerConfig
-    config_dict = {
-        key: value for key, value in args_dict.items()
-        if key in ServerConfig.model_fields
-    }
+    config_dict = {key: value for key, value in args_dict.items() if key in ServerConfig.model_fields}
 
     try:
         return ServerConfig(**config_dict)
@@ -313,7 +312,7 @@ def create_server_config(args: argparse.Namespace) -> ServerConfig:
         sys.exit(1)
 
 
-def initialize_server_environment(config: ServerConfig) -> Optional[object]:
+def initialize_server_environment(config: ServerConfig) -> object | None:
     """Initialize common server environment and settings.
 
     This function handles shared initialization logic for both standalone
@@ -341,6 +340,7 @@ def initialize_server_environment(config: ServerConfig) -> Optional[object]:
         settings = initialize_server_environment(config)
         if settings is None:
             return  # Initialization failed
+
     """
     # Configure logging
     configure_logging(config.log_level)
@@ -382,6 +382,7 @@ def run_standalone_server(config: ServerConfig) -> None:
 
         config = ServerConfig(transport="sse")
         run_standalone_server(config)
+
     """
     # Initialize environment
     settings = initialize_server_environment(config)
@@ -435,6 +436,7 @@ def run_integrated_server(config: ServerConfig) -> None:
 
         config = ServerConfig(transport="sse")
         run_integrated_server(config)
+
     """
     # Initialize environment
     settings = initialize_server_environment(config)
@@ -464,7 +466,7 @@ def run_integrated_server(config: ServerConfig) -> None:
     )
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Main entry point for the Template MCP Server.
 
     This function serves as the primary entry point when running the server
@@ -488,6 +490,7 @@ def main(argv: Optional[list[str]] = None) -> None:
 
         # Run with custom arguments
         main(["--transport", "sse", "--port", "8000"])
+
     """
     # Parse arguments
     args = parse_args(argv)

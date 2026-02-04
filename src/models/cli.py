@@ -7,14 +7,13 @@ objects used throughout the application.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
 
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LogLevel(str, Enum):
     """Logging level enumeration."""
-    
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -24,7 +23,7 @@ class LogLevel(str, Enum):
 
 class MCPTransportType(str, Enum):
     """MCP transport type enumeration."""
-    
+
     SSE = "sse"
     HTTP_STREAMING = "http-streaming"
 
@@ -51,12 +50,10 @@ class ServerConfig(BaseModel):
         API token (overrides env file if provided)
     transport : MCPTransportType
         MCP transport protocol (default: MCPTransportType.SSE)
+
     """
 
-    model_config = ConfigDict(
-        use_enum_values=True,
-        extra="forbid"
-    )
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     host: str = Field(
         default="0.0.0.0",

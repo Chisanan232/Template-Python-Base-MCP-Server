@@ -118,7 +118,7 @@ Usage Examples
 from __future__ import annotations
 
 # Re-export commonly used models
-from .cli import ServerConfig, LogLevel, MCPTransportType
+from .cli import LogLevel, MCPTransportType, ServerConfig
 
 __all__ = [
     # CLI models

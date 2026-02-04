@@ -11,8 +11,13 @@ const sidebars: SidebarsConfig = {
       label: '📖 Introduction',
     },
     {
+      type: 'doc',
+      id: 'getting-started-summary',
+      label: '🚀 Getting Started Summary',
+    },
+    {
       type: 'category',
-      label: '🤟 Quickly Start',
+      label: '🤟 Getting Started',
       collapsed: false,
       items: [
         {
@@ -38,6 +43,36 @@ const sidebars: SidebarsConfig = {
       ],
     },
     {
+      type: 'doc',
+      id: 'architecture',
+      label: '🏗️ Architecture Overview',
+    },
+    {
+      type: 'doc',
+      id: 'usage-guide',
+      label: '📖 Usage Guide',
+    },
+    {
+      type: 'doc',
+      id: 'examples',
+      label: '💡 Examples & Tutorials',
+    },
+    {
+      type: 'doc',
+      id: 'deployment',
+      label: '🚀 Deployment Guide',
+    },
+    {
+      type: 'doc',
+      id: 'best-practices',
+      label: '✨ Best Practices',
+    },
+    {
+      type: 'doc',
+      id: 'documentation-overview',
+      label: '📚 Documentation Overview',
+    },
+    {
       type: 'category',
       label: '🧑‍💻 API References',
       items: [
@@ -46,53 +81,11 @@ const sidebars: SidebarsConfig = {
           id: 'api-references/api-references',
           label: '📚 API References',
         },
-        // {
-        //   type: 'doc',
-        //   id: 'server-references/environment-configuration',
-        //   label: '🌍 Environment Configuration',
-        // },
-        // {
-        //   type: 'doc',
-        //   id: 'server-references/logging-configuration',
-        //   label: '📋 Logging Configuration',
-        // },
-        // {
-        //   type: 'doc',
-        //   id: 'server-references/cli-execution-methods',
-        //   label: '⌨️ CLI Execution Methods',
-        // },
-        // {
-        //   type: 'doc',
-        //   id: 'server-references/deployment-guide',
-        //   label: '🚀 Deployment Guide',
-        // },
-        // {
-        //   type: 'category',
-        //   label: '🌐 Web Server',
-        //   items: [
-        //     {
-        //       type: 'doc',
-        //       id: 'server-references/web-server/web-apis',
-        //       label: '🌐 Web APIs',
-        //     },
-        //     {
-        //       type: 'category',
-        //       label: '🔌 End-points',
-        //       items: [
-        //         {
-        //           type: 'doc',
-        //           id: 'server-references/web-server/end-points/web-api-health-check',
-        //           label: '💓 Health Check',
-        //         },
-        //       ],
-        //     },
-        //   ],
-        // },
       ],
     },
     {
       type: 'category',
-      label: '👋 Welcome to contribute',
+      label: '👋 Contributing',
       items: [
         {
           type: 'doc',

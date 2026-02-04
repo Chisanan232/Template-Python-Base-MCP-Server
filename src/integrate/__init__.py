@@ -118,14 +118,14 @@ To extend this template with integrated server customization:
            def create(**kwargs) -> FastAPI:
                # Get base app from parent
                app = super().create(**kwargs)
-               
+
                # Add custom initialization
                app.state.custom_data = {}
-               
+
                # Add custom routers
                from src.web_server.routers import custom_router
                app.include_router(custom_router)
-               
+
                return app
 
 5. **Using custom factory**:
@@ -136,7 +136,7 @@ To extend this template with integrated server customization:
 
        # Use custom factory
        custom_factory = CustomIntegratedFactory
-       
+
        # Create server with context manager
        with integrated_server_lifecycle():
            app = custom_factory.create(

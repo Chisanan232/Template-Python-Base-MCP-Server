@@ -96,6 +96,7 @@ class Settings(BaseSettings):
         CORS allowed methods (loaded from CORS_ALLOW_METHODS env var)
     cors_allow_headers : list[str]
         CORS allowed headers (loaded from CORS_ALLOW_HEADERS env var)
+
     """
 
     model_config = SettingsConfigDict(
@@ -183,6 +184,7 @@ class Settings(BaseSettings):
                 print(f"Token is set: {token[:10]}...")
             else:
                 print("No token configured")
+
         """
         return self.api_token.get_secret_value() if self.api_token else None
 
@@ -205,6 +207,7 @@ class Settings(BaseSettings):
         .. code-block:: python
 
             settings = Settings.from_env_file("/path/to/.env")
+
         """
         return cls(_env_file=str(env_file))
 
@@ -227,6 +230,7 @@ class Settings(BaseSettings):
 
             settings = get_settings()
             json_str = settings.model_dump_json(exclude={"api_token"})
+
         """
         return super().model_dump_json(exclude={"api_token"}, **kwargs)
 
@@ -277,6 +281,7 @@ def get_settings(
 
         # Force reload
         settings = get_settings(force_reload=True)
+
     """
     global _settings_instance
 
@@ -317,6 +322,7 @@ def reset_settings() -> None:
 
         reset_settings()
         settings = get_settings()  # Creates fresh instance
+
     """
     global _settings_instance
     _settings_instance = None

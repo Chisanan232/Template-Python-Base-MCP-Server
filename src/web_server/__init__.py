@@ -329,20 +329,22 @@ Lifespan events can be configured:
     async def lifespan(app: FastAPI):
         # Startup
         print("Starting up")
-        yield
+
+Yield:
         # Shutdown
         print("Shutting down")
 
     app = FastAPI(lifespan=lifespan)
+
 """
 
 from __future__ import annotations
 
-from .app import WebServerFactory, web_factory, create_app, mount_service
+from .app import WebServerFactory, create_app, mount_service, web_factory
 
 __all__ = [
     "WebServerFactory",
-    "web_factory",
     "create_app",
     "mount_service",
+    "web_factory",
 ]

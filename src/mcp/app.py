@@ -114,6 +114,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
         mcp_factory.reset()
         mcp_server = mcp_factory.create()
+
     """
 
     @staticmethod
@@ -147,6 +148,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
             mcp_server = mcp_factory.create()
             print(mcp_server.name)  # "TemplateMCPServer"
+
         """
         # Create a new FastMCP instance
         global _MCP_SERVER_INSTANCE
@@ -183,6 +185,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
             @mcp_server.tool("my_tool")
             async def my_tool(param: str) -> dict:
                 return {"result": param}
+
         """
         assert _MCP_SERVER_INSTANCE is not None, "It must be created FastMCP first."
         return _MCP_SERVER_INSTANCE
@@ -212,6 +215,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
             # In test teardown
             mcp_factory.reset()
+
         """
         global _MCP_SERVER_INSTANCE
         _MCP_SERVER_INSTANCE = None
@@ -245,6 +249,7 @@ class MCPServerFactory(BaseServerFactory[FastMCP]):
 
             mcp_factory.create()
             app = FastAPI(lifespan=mcp_factory.lifespan())
+
         """
         try:
             _mcp_server = MCPServerFactory.get()

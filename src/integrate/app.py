@@ -25,18 +25,19 @@ Quick Start
     app = IntegratedServerFactory.create(mcp_transport="streamable-http", retry=3)
 
 Notes
-=====
+-----
 - When retry > 0, SDK retry handlers are enabled for rate limits, server
   errors, and connection issues.
 - Token can be deferred at creation time and initialized later by the entrypoint
   (useful for CLI-driven configuration).
+
 """
 
 from __future__ import annotations
 
 import contextlib
 import logging
-from typing import Final, Optional
+from typing import Final
 
 from fastapi import FastAPI
 
@@ -53,7 +54,7 @@ _DEFAULT_MOUNT_PATHS: Final[dict[MCPTransportType, str]] = {
 
 _LOG: Final[logging.Logger] = logging.getLogger(__name__)
 
-_INTEGRATED_SERVER_INSTANCE: Optional[FastAPI] = None
+_INTEGRATED_SERVER_INSTANCE: FastAPI | None = None
 
 
 @contextlib.contextmanager
@@ -77,6 +78,7 @@ def integrated_server_lifecycle():
             app = IntegratedServerFactory.create()
             # Use app
         # Cleanup happens automatically
+
     """
     try:
         yield
@@ -106,6 +108,7 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
 
         # Access the instance later
         app2 = IntegratedServerFactory.get()
+
     """
 
     @staticmethod
@@ -145,10 +148,11 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
                 mcp_mount_path="/mcp",
                 retry=3,
             )
+
         """
-        token: Optional[str] = kwargs.get("token", None)
+        token: str | None = kwargs.get("token")
         mcp_transport_input = kwargs.get("mcp_transport", MCPTransportType.SSE)
-        mcp_mount_path: Optional[str] = kwargs.get("mcp_mount_path", None)
+        mcp_mount_path: str | None = kwargs.get("mcp_mount_path")
         retry: int = kwargs.get("retry", 3)
 
         # Normalize transport to enum
@@ -219,6 +223,7 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             from src.integrate.app import IntegratedServerFactory
 
             app = IntegratedServerFactory.get()
+
         """
         assert _INTEGRATED_SERVER_INSTANCE is not None, "Integrated server must be created first."
         return _INTEGRATED_SERVER_INSTANCE
@@ -241,10 +246,11 @@ class IntegratedServerFactory(BaseServerFactory[FastAPI]):
             from src.integrate.app import IntegratedServerFactory
 
             IntegratedServerFactory.reset()
+
         """
         global _INTEGRATED_SERVER_INSTANCE
         _INTEGRATED_SERVER_INSTANCE = None
-        
+
         # Also reset the underlying factories
         mcp_factory.reset()
         web_factory.reset()

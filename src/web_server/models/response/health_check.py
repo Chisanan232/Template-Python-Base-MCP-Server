@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthyCheckResponseDto(BaseModel):
@@ -28,6 +28,7 @@ class HealthyCheckResponseDto(BaseModel):
         Server uptime in seconds
     checks : dict[str, bool] | None
         Individual health check results for different components
+
     """
 
     model_config = ConfigDict(
@@ -45,7 +46,7 @@ class HealthyCheckResponseDto(BaseModel):
                     "mcp_server": True,
                 },
             }
-        }
+        },
     )
 
     status: Literal["healthy", "unhealthy"] = Field(

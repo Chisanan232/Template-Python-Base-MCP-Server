@@ -125,8 +125,8 @@ All modules use type hints for better IDE support and static analysis.
 from __future__ import annotations
 
 # Re-export commonly used components for convenience
-from .config import get_settings, Settings
-from .models.cli import ServerConfig, LogLevel, MCPTransportType
+from .config import Settings, get_settings
+from .models.cli import LogLevel, MCPTransportType, ServerConfig
 
 __version__ = "0.0.0"
 __author__ = "Template Author"
