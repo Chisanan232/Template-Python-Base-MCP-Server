@@ -65,19 +65,19 @@ Here's a complete example of a database dependency:
 .. code-block:: python
 
     \"\"\"Database dependency with connection pooling.\"\"\"
-    
+
     import logging
     from typing import Optional, AsyncGenerator
     from sqlalchemy import create_engine, MetaData
     from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
     from sqlalchemy.orm import sessionmaker, declarative_base
     from src.config import get_settings
-    
+
     logger = logging.getLogger(__name__)
-    
+
     class DatabaseDependency:
         \"\"\"Manages database connections and sessions.\"\"\"
-        
+
         def __init__(self):
             self.settings = get_settings()
             self._engine = None
@@ -85,7 +85,7 @@ Here's a complete example of a database dependency:
             self._session_factory = None
             self._async_session_factory = None
             self._base = declarative_base()
-        
+
         @property
         def engine(self):
             \"\"\"Get synchronous database engine.\"\"\"
@@ -97,7 +97,7 @@ Here's a complete example of a database dependency:
                     echo=self.settings.db_echo
                 )
             return self._engine
-        
+
         @property
         def async_engine(self):
             \"\"\"Get asynchronous database engine.\"\"\"
@@ -109,7 +109,7 @@ Here's a complete example of a database dependency:
                     echo=self.settings.db_echo
                 )
             return self._async_engine
-        
+
         @property
         def session_factory(self):
             \"\"\"Get synchronous session factory.\"\"\"
@@ -120,7 +120,7 @@ Here's a complete example of a database dependency:
                     autoflush=False
                 )
             return self._session_factory
-        
+
         @property
         def async_session_factory(self):
             \"\"\"Get asynchronous session factory.\"\"\"
@@ -131,11 +131,11 @@ Here's a complete example of a database dependency:
                     expire_on_commit=False
                 )
             return self._async_session_factory
-        
+
         def get_session(self) -> sessionmaker:
             \"\"\"Get a database session.\"\"\"
             return self.session_factory()
-        
+
         async def get_async_session(self) -> AsyncGenerator[AsyncSession, None]:
             \"\"\"Get an async database session.\"\"\"
             async with self.async_session_factory() as session:
@@ -147,19 +147,19 @@ Here's a complete example of a database dependency:
                     raise
                 finally:
                     await session.close()
-        
+
         @property
         def base(self):
             \"\"\"Get declarative base for models.\"\"\"
             return self._base
-        
+
         async def close(self):
             \"\"\"Close all database connections.\"\"\"
             if self._async_engine:
                 await self._async_engine.dispose()
             if self._engine:
                 self._engine.dispose()
-    
+
     # Global dependency instance
     db_dependency = DatabaseDependency()
 
@@ -173,9 +173,9 @@ Dependencies can be injected into FastAPI endpoints using dependency injection:
     from fastapi import Depends, FastAPI
     from src.web_server.dependencies.database import db_dependency
     from sqlalchemy.orm import Session
-    
+
     app = FastAPI()
-    
+
     @app.get("/users/{user_id}")
     async def get_user(
         user_id: int,
@@ -184,7 +184,7 @@ Dependencies can be injected into FastAPI endpoints using dependency injection:
         \"\"\"Get user by ID.\"\"\"
         # Use session for database operations
         pass
-    
+
     @app.post("/data")
     async def create_data(
         data: DataModel,
@@ -204,7 +204,7 @@ Test dependencies with mock implementations:
     import pytest
     from unittest.mock import Mock, AsyncMock
     from src.web_server.dependencies.database import db_dependency
-    
+
     @pytest.fixture
     def mock_db_session():
         \"\"\"Mock database session for testing.\"\"\"
@@ -213,7 +213,7 @@ Test dependencies with mock implementations:
         session.commit = Mock()
         session.rollback = Mock()
         return session
-    
+
     @pytest.fixture
     async def mock_async_session():
         \"\"\"Mock async database session for testing.\"\"\"
@@ -313,11 +313,11 @@ Add these settings to your configuration:
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_ECHO: bool = False
-    
+
     # Redis settings
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_MAX_CONNECTIONS: int = 10
-    
+
     # External API settings
     API_TIMEOUT: int = 30
     API_RETRY_ATTEMPTS: int = 3
@@ -329,13 +329,13 @@ Import this package in your web server application:
 
     # Import dependencies to make them available
     from src.web_server.dependencies import db_dependency, cache_dependency
-    
+
     # Use in your FastAPI app
     from fastapi import FastAPI, Depends
     from src.web_server.dependencies.database import db_dependency
-    
+
     app = FastAPI()
-    
+
     @app.get("/health")
     async def health_check():
         \"\"\"Health check with dependency status.\"\"\"

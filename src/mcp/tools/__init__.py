@@ -58,23 +58,23 @@ Here's a complete example of how to implement a custom MCP tool:
 .. code-block:: python
 
     \"\"\"Calculator tool for mathematical operations.\"\"\"
-    
+
     from typing import Union
     from fastmcp import Tool
     from src.mcp.models.input.calculator_input import CalculatorInput
     from src.mcp.models.output.calculator_output import CalculatorOutput, CalculatorError
-    
+
     @mcp_factory.get().tool()
     def calculate(input: CalculatorInput) -> Union[CalculatorOutput, CalculatorError]:
         \"\"\"Perform mathematical calculations safely.
-        
-        Args:
+
+Args:
             input: CalculatorInput with expression and precision
-            
-        Returns:
+
+Returns:
             CalculatorOutput with result or CalculatorError if calculation fails
-            
-        Example:
+
+Example:
             >>> calculate(CalculatorInput(expression="2 + 2", precision=2))
             CalculatorOutput(result=4.0, expression="2 + 2", precision=2)
         \"\"\"
@@ -82,7 +82,7 @@ Here's a complete example of how to implement a custom MCP tool:
             # Safe evaluation (avoid eval() for security)
             result = safe_eval(input.expression)
             rounded_result = round(result, input.precision)
-            
+
             return CalculatorOutput(
                 result=rounded_result,
                 expression=input.expression,
@@ -103,12 +103,12 @@ Tools are automatically registered with the MCP server through decorators:
 .. code-block:: python
 
     from src.mcp.app import mcp_factory
-    
+
     # Tools are registered when the module is imported
     # Import your tools in src/mcp/tools/__init__.py
     from .calculator import calculate
     from .database import query_database
-    
+
     # Tools are now available in the MCP server
 
 Testing Custom Tools
@@ -121,21 +121,21 @@ Test your tools with proper fixtures:
     import pytest
     from src.mcp.tools.calculator import calculate
     from src.mcp.models.input.calculator_input import CalculatorInput
-    
+
     def test_calculate_addition():
         \"\"\"Test basic addition.\"\"\"
         input_data = CalculatorInput(expression="2 + 2", precision=2)
         result = calculate(input_data)
-        
+
         assert result.result == 4.0
         assert result.expression == "2 + 2"
         assert result.precision == 2
-    
+
     def test_calculate_invalid_expression():
         \"\"\"Test error handling for invalid expressions.\"\"\"
         input_data = CalculatorInput(expression="invalid", precision=2)
         result = calculate(input_data)
-        
+
         assert hasattr(result, 'error')
         assert result.error_type == "CalculationError"
 
@@ -215,6 +215,7 @@ Import this package in your main MCP application:
     # Or import specific tools
     from src.mcp.tools.calculator import calculate
     from src.mcp.tools.database import query_database
+
 """
 
 from __future__ import annotations
@@ -231,7 +232,7 @@ from __future__ import annotations
 __all__ = [
     # Add your tool functions here
     # "calculate",
-    # "query_database", 
+    # "query_database",
     # "read_file",
     # "write_file",
     # "call_external_api",
@@ -242,7 +243,7 @@ __tool_package__ = True
 __tool_version__ = "1.0.0"
 __supported_features__ = [
     "synchronous_tools",
-    "asynchronous_tools", 
+    "asynchronous_tools",
     "error_handling",
     "input_validation",
     "output_validation",

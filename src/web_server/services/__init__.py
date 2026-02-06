@@ -65,7 +65,7 @@ Here's a complete example of a user service:
 .. code-block:: python
 
     \"\"\"User service for managing user accounts and authentication.\"\"\"
-    
+
     import logging
     from typing import Optional, List
     from datetime import datetime, timedelta
@@ -74,26 +74,26 @@ Here's a complete example of a user service:
     from src.web_server.models.request.user import UserCreateRequest, UserUpdateRequest
     from src.web_server.models.response.user import UserResponse, UserListResponse
     from src.models.dto.user import UserDTO, UserStatus
-    
+
     logger = logging.getLogger(__name__)
-    
+
     class UserService:
         \"\"\"Service for user management operations.\"\"\"
-        
+
         def __init__(self, session: Session = Depends(db_dependency.get_session)):
             self.session = session
             self._cache = {}  # Simple in-memory cache for demo
-        
+
         async def create_user(self, user_data: UserCreateRequest) -> UserResponse:
             \"\"\"Create a new user account.
-            
-            Args:
+
+Args:
                 user_data: User creation request with email, password, etc.
-                
-            Returns:
+
+Returns:
                 UserResponse with created user information
-                
-            Raises:
+
+Raises:
                 UserAlreadyExistsError: If user with email already exists
                 ValidationError: If input data is invalid
             \"\"\"
@@ -102,7 +102,7 @@ Here's a complete example of a user service:
                 existing_user = self._find_user_by_email(user_data.email)
                 if existing_user:
                     raise UserAlreadyExistsError(f"User with email {user_data.email} already exists")
-                
+
                 # Create new user
                 user = UserDTO(
                     email=user_data.email,
@@ -111,130 +111,130 @@ Here's a complete example of a user service:
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow()
                 )
-                
+
                 # Hash password (simplified for demo)
                 user.password_hash = self._hash_password(user_data.password)
-                
+
                 # Save to database
                 self.session.add(user)
                 self.session.commit()
                 self.session.refresh(user)
-                
+
                 # Clear cache
                 self._cache.clear()
-                
+
                 logger.info(f"Created user: {user.email}")
                 return UserResponse.from_dto(user)
-                
+
             except Exception as e:
                 self.session.rollback()
                 logger.error(f"Failed to create user: {e}")
                 raise
-        
+
         async def get_user(self, user_id: int) -> Optional[UserResponse]:
             \"\"\"Get user by ID.\"\"\"
             try:
                 # Check cache first
                 if user_id in self._cache:
                     return self._cache[user_id]
-                
+
                 user = self.session.query(UserDTO).filter(UserDTO.id == user_id).first()
                 if user:
                     response = UserResponse.from_dto(user)
                     self._cache[user_id] = response
                     return response
-                
+
                 return None
-                
+
             except Exception as e:
                 logger.error(f"Failed to get user {user_id}: {e}")
                 return None
-        
+
         async def update_user(self, user_id: int, user_data: UserUpdateRequest) -> Optional[UserResponse]:
             \"\"\"Update user information.\"\"\"
             try:
                 user = self.session.query(UserDTO).filter(UserDTO.id == user_id).first()
                 if not user:
                     return None
-                
+
                 # Update fields
                 if user_data.username:
                     user.username = user_data.username
                 if user_data.status:
                     user.status = user_data.status
-                
+
                 user.updated_at = datetime.utcnow()
-                
+
                 self.session.commit()
                 self.session.refresh(user)
-                
+
                 # Update cache
                 response = UserResponse.from_dto(user)
                 self._cache[user_id] = response
-                
+
                 logger.info(f"Updated user: {user.email}")
                 return response
-                
+
             except Exception as e:
                 self.session.rollback()
                 logger.error(f"Failed to update user {user_id}: {e}")
                 return None
-        
+
         async def delete_user(self, user_id: int) -> bool:
             \"\"\"Delete user account.\"\"\"
             try:
                 user = self.session.query(UserDTO).filter(UserDTO.id == user_id).first()
                 if not user:
                     return False
-                
+
                 self.session.delete(user)
                 self.session.commit()
-                
+
                 # Clear cache
                 if user_id in self._cache:
                     del self._cache[user_id]
-                
+
                 logger.info(f"Deleted user: {user.email}")
                 return True
-                
+
             except Exception as e:
                 self.session.rollback()
                 logger.error(f"Failed to delete user {user_id}: {e}")
                 return False
-        
+
         async def list_users(self, skip: int = 0, limit: int = 100) -> UserListResponse:
             \"\"\"List users with pagination.\"\"\"
             try:
                 users = self.session.query(UserDTO).offset(skip).limit(limit).all()
                 total = self.session.query(UserDTO).count()
-                
+
                 user_responses = [UserResponse.from_dto(user) for user in users]
-                
+
                 return UserListResponse(
                     users=user_responses,
                     total=total,
                     skip=skip,
                     limit=limit
                 )
-                
+
             except Exception as e:
                 logger.error(f"Failed to list users: {e}")
                 return UserListResponse(users=[], total=0, skip=skip, limit=limit)
-        
+
         def _find_user_by_email(self, email: str) -> Optional[UserDTO]:
             \"\"\"Find user by email address.\"\"\"
             return self.session.query(UserDTO).filter(UserDTO.email == email).first()
-        
+
         def _hash_password(self, password: str) -> str:
             \"\"\"Hash password (simplified for demo).\"\"\"
             import hashlib
             return hashlib.sha256(password.encode()).hexdigest()
-    
+
     # Custom exceptions
     class UserAlreadyExistsError(Exception):
         \"\"\"Raised when trying to create a user that already exists.\"\"\"
         pass
-    
+
     class ValidationError(Exception):
         \"\"\"Raised when input validation fails.\"\"\"
         pass
@@ -249,9 +249,9 @@ Services can be used in FastAPI endpoints through dependency injection:
     from fastapi import Depends, FastAPI, HTTPException
     from src.web_server.services.user_service import UserService
     from src.web_server.models.request.user import UserCreateRequest
-    
+
     app = FastAPI()
-    
+
     @app.post("/users", response_model=UserResponse)
     async def create_user(
         user_data: UserCreateRequest,
@@ -262,7 +262,7 @@ Services can be used in FastAPI endpoints through dependency injection:
             return await user_service.create_user(user_data)
         except UserService.UserAlreadyExistsError as e:
             raise HTTPException(status_code=400, detail=str(e))
-    
+
     @app.get("/users/{user_id}", response_model=UserResponse)
     async def get_user(
         user_id: int,
@@ -284,7 +284,7 @@ Test services with mock dependencies:
     import pytest
     from unittest.mock import Mock, AsyncMock
     from src.web_server.services.user_service import UserService
-    
+
     @pytest.fixture
     def mock_session():
         \"\"\"Mock database session for testing.\"\"\"
@@ -295,28 +295,28 @@ Test services with mock dependencies:
         session.rollback = Mock()
         session.refresh = Mock()
         return session
-    
+
     @pytest.fixture
     def user_service(mock_session):
         \"\"\"User service with mocked dependencies.\"\"\"
         return UserService(session=mock_session)
-    
+
     @pytest.mark.asyncio
     async def test_create_user_success(user_service, mock_session):
         \"\"\"Test successful user creation.\"\"\"
         from src.web_server.models.request.user import UserCreateRequest
-        
+
         user_data = UserCreateRequest(
             email="test@example.com",
             username="testuser",
             password="password123"
         )
-        
+
         # Mock no existing user
         user_service._find_user_by_email = Mock(return_value=None)
-        
+
         result = await user_service.create_user(user_data)
-        
+
         assert result.email == "test@example.com"
         assert result.username == "testuser"
         mock_session.add.assert_called_once()
@@ -410,13 +410,13 @@ Import this package in your web server application:
 
     # Import services to make them available
     from src.web_server.services import UserService, DataService, NotificationService
-    
+
     # Use in your FastAPI app
     from fastapi import FastAPI, Depends
     from src.web_server.services.user_service import UserService
-    
+
     app = FastAPI()
-    
+
     @app.get("/health")
     async def health_check():
         \"\"\"Health check with service status.\"\"\"
@@ -424,6 +424,7 @@ Import this package in your web server application:
             "services": "healthy",
             "status": "healthy"
         }
+
 """
 
 from __future__ import annotations

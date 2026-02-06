@@ -70,37 +70,37 @@ Here's a complete example of a users router:
 .. code-block:: python
 
     \"\"\"User management router for FastAPI.\"\"\"
-    
+
     from typing import List, Optional
     from fastapi import APIRouter, Depends, HTTPException, Query, Path
     from fastapi.responses import JSONResponse
     from src.web_server.services.user_service import UserService, UserAlreadyExistsError
     from src.web_server.models.request.user import UserCreateRequest, UserUpdateRequest
     from src.web_server.models.response.user import UserResponse, UserListResponse, ErrorResponse
-    
+
     router = APIRouter(
         prefix="/users",
         tags=["users"],
         responses={404: {"model": ErrorResponse, "description": "User not found"}},
     )
-    
+
     @router.post("/", response_model=UserResponse, status_code=201)
     async def create_user(
         user_data: UserCreateRequest,
         user_service: UserService = Depends()
     ) -> UserResponse:
         \"\"\"Create a new user account.
-        
-        Args:
+
+Args:
             user_data: User creation data including email, username, password
-            
-        Returns:
+
+Returns:
             Created user information
-            
-        Raises:
+
+Raises:
             HTTPException: If user already exists or validation fails
-            
-        Example:
+
+Example:
             >>> POST /users
             >>> {
             ...     "email": "user@example.com",
@@ -122,24 +122,24 @@ Here's a complete example of a users router:
                 status_code=500,
                 detail="Internal server error while creating user"
             )
-    
+
     @router.get("/{user_id}", response_model=UserResponse)
     async def get_user(
         user_id: int = Path(..., ge=1, description="User ID"),
         user_service: UserService = Depends()
     ) -> UserResponse:
         \"\"\"Get user by ID.
-        
-        Args:
+
+Args:
             user_id: Unique identifier of the user
-            
-        Returns:
+
+Returns:
             User information
-            
-        Raises:
+
+Raises:
             HTTPException: If user not found
-            
-        Example:
+
+Example:
             >>> GET /users/123
         \"\"\"
         user = await user_service.get_user(user_id)
@@ -150,7 +150,7 @@ Here's a complete example of a users router:
                 headers={"X-Error": "UserNotFound"}
             )
         return user
-    
+
     @router.put("/{user_id}", response_model=UserResponse)
     async def update_user(
         user_id: int = Path(..., ge=1, description="User ID"),
@@ -158,18 +158,18 @@ Here's a complete example of a users router:
         user_service: UserService = Depends()
     ) -> UserResponse:
         \"\"\"Update user information.
-        
-        Args:
+
+Args:
             user_id: Unique identifier of the user
             user_data: User update data
-            
-        Returns:
+
+Returns:
             Updated user information
-            
-        Raises:
+
+Raises:
             HTTPException: If user not found or validation fails
-            
-        Example:
+
+Example:
             >>> PUT /users/123
             >>> {
             ...     "username": "newusername",
@@ -183,21 +183,21 @@ Here's a complete example of a users router:
                 detail=f"User with ID {user_id} not found"
             )
         return user
-    
+
     @router.delete("/{user_id}", status_code=204)
     async def delete_user(
         user_id: int = Path(..., ge=1, description="User ID"),
         user_service: UserService = Depends()
     ) -> None:
         \"\"\"Delete user account.
-        
-        Args:
+
+Args:
             user_id: Unique identifier of the user
-            
-        Raises:
+
+Raises:
             HTTPException: If user not found
-            
-        Example:
+
+Example:
             >>> DELETE /users/123
         \"\"\"
         success = await user_service.delete_user(user_id)
@@ -206,7 +206,7 @@ Here's a complete example of a users router:
                 status_code=404,
                 detail=f"User with ID {user_id} not found"
             )
-    
+
     @router.get("/", response_model=UserListResponse)
     async def list_users(
         skip: int = Query(0, ge=0, description="Number of users to skip"),
@@ -214,33 +214,33 @@ Here's a complete example of a users router:
         user_service: UserService = Depends()
     ) -> UserListResponse:
         \"\"\"List users with pagination.
-        
-        Args:
+
+Args:
             skip: Number of users to skip (for pagination)
             limit: Maximum number of users to return
-            
-        Returns:
+
+Returns:
             Paginated list of users
-            
-        Example:
+
+Example:
             >>> GET /users?skip=0&limit=50
         \"\"\"
         return await user_service.list_users(skip=skip, limit=limit)
-    
+
     @router.get("/{user_id}/status", response_model=dict)
     async def get_user_status(
         user_id: int = Path(..., ge=1, description="User ID"),
         user_service: UserService = Depends()
     ) -> dict:
         \"\"\"Get user status information.
-        
-        Args:
+
+Args:
             user_id: Unique identifier of the user
-            
-        Returns:
+
+Returns:
             User status information
-            
-        Example:
+
+Example:
             >>> GET /users/123/status
         \"\"\"
         user = await user_service.get_user(user_id)
@@ -249,7 +249,7 @@ Here's a complete example of a users router:
                 status_code=404,
                 detail=f"User with ID {user_id} not found"
             )
-        
+
         return {
             "user_id": user.id,
             "status": user.status,
@@ -266,18 +266,18 @@ Routers are integrated into the main FastAPI application:
 
     from fastapi import FastAPI
     from src.web_server.routers import users, health, data
-    
+
     app = FastAPI(
         title="MCP Server API",
         description="API for MCP Server Template",
         version="1.0.0"
     )
-    
+
     # Include routers
     app.include_router(users.router)
     app.include_router(health.router)
     app.include_router(data.router)
-    
+
     # Or with custom prefix
     app.include_router(
         users.router,
@@ -295,9 +295,9 @@ Advanced Router Features
     from fastapi import FastAPI
     from src.web_server.middleware.auth import auth_middleware
     from src.web_server.routers.admin import router as admin_router
-    
+
     app = FastAPI()
-    
+
     # Apply authentication middleware to admin routes
     admin_router.middleware("http")(auth_middleware)
     app.include_router(admin_router)
@@ -308,7 +308,7 @@ Advanced Router Features
 
     from fastapi import APIRouter, Depends
     from src.web_server.dependencies.auth import get_current_user
-    
+
     router = APIRouter(
         prefix="/protected",
         dependencies=[Depends(get_current_user)],
@@ -321,9 +321,9 @@ Advanced Router Features
 
     from fastapi import APIRouter
     from src.web_server.exceptions import UserNotFoundError
-    
+
     router = APIRouter()
-    
+
     @router.exception_handler(UserNotFoundError)
     async def user_not_found_handler(request, exc):
         return JSONResponse(
@@ -344,23 +344,23 @@ Test routers with TestClient and mocked dependencies:
     from src.web_server.app import app
     from src.web_server.routers.users import router
     from src.web_server.services.user_service import UserService
-    
+
     @pytest.fixture
     def client():
         return TestClient(app)
-    
+
     @pytest.fixture
     def mock_user_service():
         service = Mock(spec=UserService)
         service.create_user = AsyncMock()
         service.get_user = AsyncMock()
         return service
-    
+
     def test_create_user_success(client, mock_user_service):
         \"\"\"Test successful user creation.\"\"\"
         # Mock the service dependency
         app.dependency_overrides[UserService] = lambda: mock_user_service
-        
+
         # Mock response
         from src.web_server.models.response.user import UserResponse
         mock_user_service.create_user.return_value = UserResponse(
@@ -369,16 +369,16 @@ Test routers with TestClient and mocked dependencies:
             username="testuser",
             status="active"
         )
-        
+
         response = client.post("/users/", json={
             "email": "test@example.com",
             "username": "testuser",
             "password": "password123"
         })
-        
+
         assert response.status_code == 201
         assert response.json()["email"] == "test@example.com"
-        
+
         # Clean up
         app.dependency_overrides.clear()
 
@@ -471,14 +471,15 @@ Import this package in your web server application:
 
     # Import routers to make them available
     from src.web_server.routers import users_router, health_router, data_router
-    
+
     # Include in your FastAPI app
     from fastapi import FastAPI
-    
+
     app = FastAPI()
     app.include_router(users_router)
     app.include_router(health_router)
     app.include_router(data_router)
+
 """
 
 from __future__ import annotations
