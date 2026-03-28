@@ -343,27 +343,37 @@ Import this package in your web server application:
             "database": "healthy" if db_dependency.engine else "unhealthy",
             "status": "healthy"
         }
+
 """
 
 from __future__ import annotations
+
+from .health_check import get_health_check_service
 
 # Import all dependency modules to make them available
 # Child projects should add their dependency imports here:
 
 # Example imports (uncomment and modify for your dependencies):
-# from .database import db_dependency
-# from .cache import cache_dependency
-# from .auth import auth_dependency
-# from .storage import storage_dependency
-# from .notifications import notification_dependency
+# from .database import DatabaseDependency, get_database
+# from .auth import AuthDependency, get_current_user, verify_token
+# from .cache import CacheDependency, get_cache
+# from .external_api import ExternalAPIDependency, get_api_client
+# from .config import ConfigDependency, get_config
 
 __all__ = [
-    # Add your dependency instances here
-    # "db_dependency",
-    # "cache_dependency",
-    # "auth_dependency",
-    # "storage_dependency",
-    # "notification_dependency",
+    "get_health_check_service",
+    # Add your dependency classes and functions here
+    # "DatabaseDependency",
+    # "get_database",
+    # "AuthDependency",
+    # "get_current_user",
+    # "verify_token",
+    # "CacheDependency",
+    # "get_cache",
+    # "ExternalAPIDependency",
+    # "get_api_client",
+    # "ConfigDependency",
+    # "get_config",
 ]
 
 # Package metadata for dependency discovery
