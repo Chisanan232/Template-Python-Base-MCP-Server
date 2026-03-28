@@ -484,21 +484,22 @@ Import this package in your web server application:
 
 from __future__ import annotations
 
+from .health_check import router as health_check_router
+
 # Import all router modules to make them available
 # Child projects should add their router imports here:
 
 # Example imports (uncomment and modify for your routers):
 # from .users import router as users_router
-# from .health import router as health_router
 # from .data import router as data_router
 # from .files import router as files_router
 # from .webhooks import router as webhooks_router
 # from .admin import router as admin_router
 
 __all__ = [
+    "health_check_router",
     # Add your router instances here
     # "users_router",
-    # "health_router",
     # "data_router",
     # "files_router",
     # "webhooks_router",
