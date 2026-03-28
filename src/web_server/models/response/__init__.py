@@ -411,8 +411,18 @@ Use response models with appropriate HTTP status codes:
 
 from __future__ import annotations
 
-from .health_check import HealthyCheckResponseDto
+from .health_check import (
+    ComponentHealthStatus,
+    DetailedHealthCheckResponseDto,
+    HealthyCheckResponseDto,
+    LivenessCheckResponseDto,
+    ReadinessCheckResponseDto,
+)
 
 __all__ = [
+    "ComponentHealthStatus",
+    "DetailedHealthCheckResponseDto",
     "HealthyCheckResponseDto",
+    "LivenessCheckResponseDto",
+    "ReadinessCheckResponseDto",
 ]
