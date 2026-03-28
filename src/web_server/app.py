@@ -53,7 +53,7 @@ from .._base import BaseServerFactory
 from ..config import get_settings
 from ..mcp.app import mcp_factory
 from ..models.cli import MCPTransportType, ServerConfig
-from .models.response.health_check import HealthyCheckResponseDto
+from .routers import health_check_router
 
 _WEB_SERVER_INSTANCE: FastAPI | None = None
 
@@ -139,11 +139,8 @@ class WebServerFactory(BaseServerFactory[FastAPI]):
             allow_headers=settings.cors_allow_headers,
         )
 
-        # Add health check endpoint
-        @_WEB_SERVER_INSTANCE.get("/health", response_model=HealthyCheckResponseDto)
-        async def health_check() -> HealthyCheckResponseDto:
-            """Health check endpoint for monitoring."""
-            return HealthyCheckResponseDto(status="healthy")
+        # Include health check router
+        _WEB_SERVER_INSTANCE.include_router(health_check_router)
 
         return _WEB_SERVER_INSTANCE
 
