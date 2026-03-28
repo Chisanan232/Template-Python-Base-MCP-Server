@@ -429,6 +429,8 @@ Import this package in your web server application:
 
 from __future__ import annotations
 
+from .health_check_service import HealthCheckService, health_check_service
+
 # Import all service modules to make them available
 # Child projects should add their service imports here:
 
@@ -440,6 +442,8 @@ from __future__ import annotations
 # from .analytics_service import AnalyticsService
 
 __all__ = [
+    "HealthCheckService",
+    "health_check_service",
     # Add your service classes here
     # "UserService",
     # "DataService",
