@@ -76,7 +76,7 @@ dev = [
     "pytest-asyncio>=1.1.0",
 ]
 pre-commit-ci = [
-    "mypy>=1.17.1",
+    "mypy>=1.20.0",
     "pre-commit>=4.3.0",
     "ruff>=0.14.14",
 ]
