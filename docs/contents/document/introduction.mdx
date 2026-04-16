@@ -4,28 +4,28 @@ title: Introduction
 sidebar_position: 1
 ---
 
-# Python UV Project Template
+# MCP Server Template
 
-Welcome to the **Python UV Project Template** - a modern, production-ready template for Python projects that leverages the power of [uv](https://docs.astral.sh/uv/) package management and industry best practices.
+Welcome to the **MCP Server Template** - a comprehensive, production-ready template for building Model Context Protocol (MCP) servers with modern Python development practices, powered by [uv](https://docs.astral.sh/uv/) package management.
 
 ## What is This Template?
 
-This template provides a comprehensive foundation for Python projects, designed to eliminate the repetitive setup work that developers face when starting new projects. Instead of spending hours configuring tools, setting up CI/CD pipelines, and establishing project structure, you can focus immediately on building your application.
+This template provides a complete foundation for developing MCP servers - the standardized protocol for AI model context management. Instead of spending hours configuring server infrastructure, setting up development environments, and establishing best practices, you can focus immediately on building your MCP server functionality.
 
 ## The Problem It Solves
 
-Starting a new Python project often involves:
+Building a new MCP server typically involves:
 
-- 🔧 **Setting up package management** (pip, poetry, or uv)
-- 📁 **Creating proper project structure** with src layout
-- 🧪 **Configuring testing frameworks** (pytest, coverage)
-- ✅ **Setting up code quality tools** (black, pylint, mypy)
-- 🔄 **Establishing CI/CD workflows** for automation
-- 📚 **Creating documentation structure**
-- 🐳 **Adding containerization support**
-- ⚡ **Configuring pre-commit hooks**
+- 🔧 **Setting up MCP protocol implementation** and server infrastructure
+- 📁 **Creating proper project structure** with modern Python layout
+- 🧪 **Configuring testing frameworks** for server functionality
+- ✅ **Setting up code quality tools** (black, pylint, mypy, ruff)
+- 🔄 **Establishing CI/CD workflows** for automated testing and deployment
+- 📚 **Creating documentation structure** for API reference
+- 🐳 **Adding containerization support** for deployment
+- ⚡ **Configuring pre-commit hooks** and development automation
 
-This template eliminates all of these setup tasks, providing you with a battle-tested foundation that follows Python community best practices.
+This template eliminates all of these setup tasks, providing you with a battle-tested MCP server foundation that follows Python community best practices.
 
 ## Why Choose This Template?
 
@@ -38,78 +38,92 @@ Built around [uv](https://docs.astral.sh/uv/), the fastest Python package manage
 - **Cross-platform compatibility** (Windows, macOS, Linux)
 - **Drop-in replacement** for existing pip workflows
 
-### 🛠️ Complete Development Toolkit
+### 🛠️ Complete MCP Server Toolkit
 
-Pre-configured with essential development tools:
+Pre-configured with essential MCP server development tools:
 
 ```bash
-# Testing & Coverage
+# MCP Server Framework
+fastapi, pydantic, mcp (Model Context Protocol)
+
+# Testing & Coverage  
 pytest, pytest-cov, pytest-asyncio, pytest-rerunfailures
 
 # Code Quality
-black (formatting), pylint (linting), mypy (type checking)
+black (formatting), ruff (linting), mypy (type checking)
 
 # Development Workflow
 pre-commit hooks, GitHub Actions CI/CD
 ```
 
-### 📦 Modern Project Structure
+### 📦 Modern MCP Server Structure
 
-Follows Python packaging best practices:
+Follows Python packaging best practices for MCP servers:
 
 ```
 project/
 ├── src/                    # Source code (src layout)
+│   ├── entry.py           # Main server entry point
+│   ├── config.py          # Configuration management
+│   ├── mcp/               # MCP server implementation
+│   ├── web_server/        # Web server components
+│   ├── integrate/         # Integration server
+│   └── models/            # Data models and DTOs
 ├── test/                   # Test suites
 │   ├── unit_test/         # Unit tests
 │   └── integration_test/  # Integration tests
-├── docs_with_docusarus/   # Documentation (Docusaurus)
-├── docs_with_mkdocs/      # Alternative docs (MkDocs)
+├── docs/                   # Documentation (Docusaurus)
 ├── .github/workflows/     # CI/CD automation
 ├── pyproject.toml         # Project configuration
-└── uv.lock               # Dependency lock file
+├── uv.lock               # Dependency lock file
+└── .env.example          # Environment configuration
 ```
 
-### 🚀 Production-Ready Features
+### 🚀 Production-Ready MCP Features
 
+- **MCP Protocol Support**: Full Model Context Protocol implementation
+- **Multiple Transports**: SSE and HTTP streaming transport options
 - **Automated Testing**: Multi-Python version testing (3.12-3.14)
 - **Code Quality Gates**: Automatic formatting, linting, and type checking
 - **Security Scanning**: Built-in security checks and dependency updates
 - **Release Automation**: Automated versioning and PyPI publishing
-- **Documentation**: Both Docusaurus and MkDocs options
+- **Documentation**: Professional API documentation with Docusaurus
 - **Containerization**: Docker support for deployment
+- **Configuration Management**: Flexible environment-based configuration
 
 ## Who Should Use This Template?
 
 ### Perfect For:
 
-- **Python developers** starting new projects
-- **Teams** wanting consistent project structure
-- **Open source maintainers** needing professional project setup
-- **Data scientists** building reproducible analysis projects
-- **DevOps engineers** requiring containerized Python applications
-- **Students** learning modern Python development practices
+- **AI/ML developers** building MCP servers for model context management
+- **Python developers** creating AI-powered applications and tools
+- **Teams** standardizing MCP server development practices
+- **Open source maintainers** building reusable MCP components
+- **DevOps engineers** deploying AI infrastructure and services
+- **Students** learning modern AI development with Python
 
 ### Project Types:
 
-- 📦 **Python libraries and packages**
-- 🌐 **Web applications and APIs**
-- 🤖 **CLI tools and utilities**
-- 📊 **Data science and analysis projects**
-- 🧠 **Machine learning projects**
-- 🔧 **Internal tools and scripts**
+- 🤖 **AI Model Context Servers** for LLM integration
+- 🌐 **AI-powered Web APIs** and microservices
+- 📊 **Data processing servers** with AI capabilities
+- 🔧 **AI development tools** and utilities
+- 🧠 **Machine learning inference** servers
+- 📦 **Reusable AI components** and libraries
 
 ## Key Features at a Glance
 
 | Feature | Description | Benefit |
 |---------|-------------|---------|
+| **MCP Protocol Support** | Full Model Context Protocol implementation | Standardized AI model context management |
 | **uv Package Management** | Fast, reliable dependency management | 10-100x faster installs |
-| **Src Layout** | Modern Python project structure | Better import organization |
+| **Multiple Transport Options** | SSE and HTTP streaming transports | Flexible deployment scenarios |
+| **Modern Python Structure** | Src layout with clean architecture | Maintainable, scalable code |
 | **Multi-Python Support** | Python 3.12, 3.13, 3.14 | Future-proof compatibility |
-| **Comprehensive Testing** | pytest with coverage and async support | Reliable, well-tested code |
-| **Code Quality Tools** | black, pylint, mypy pre-configured | Consistent, high-quality code |
+| **Comprehensive Testing** | pytest with coverage and async support | Reliable, well-tested MCP servers |
+| **Code Quality Tools** | black, ruff, mypy pre-configured | Consistent, high-quality code |
 | **CI/CD Workflows** | GitHub Actions for automation | Automated testing and deployment |
-| **Documentation** | Docusaurus and MkDocs options | Professional documentation |
+| **Professional Documentation** | Docusaurus-based API docs | Clear developer experience |
 | **Docker Support** | Ready-to-use containerization | Easy deployment and distribution |
 | **Pre-commit Hooks** | Automated quality checks | Catch issues before commit |
 

@@ -1,0 +1,715 @@
+---
+id: best-practices
+title: Best Practices
+sidebar_position: 6
+---
+
+# Best Practices Guide
+
+This guide covers best practices for developing, testing, and maintaining MCP servers using this template.
+
+## Code Organization
+
+### Project Structure
+
+Follow the modular structure provided by the template:
+
+```
+src/
+├── models/              # Domain models and DTOs
+├── mcp/                 # MCP server implementation
+│   ├── tools/          # Tool implementations
+│   └── models/         # MCP-specific models
+├── web_server/         # FastAPI web server
+│   ├── routers/        # API route handlers
+│   └── models/         # Request/response models
+└── integrate/          # Integration layer
+```
+
+### Module Responsibilities
+
+- **models/**: Define data structures and validation
+- **mcp/**: Implement MCP tools and server logic
+- **web_server/**: Define API endpoints and web logic
+- **integrate/**: Combine MCP and web server
+
+### Naming Conventions
+
+```python
+# Functions and variables: snake_case
+def process_user_data():
+    user_name = "John"
+
+# Classes: PascalCase
+class UserProcessor:
+    pass
+
+# Constants: UPPER_SNAKE_CASE
+MAX_RETRIES = 3
+DEFAULT_TIMEOUT = 30
+
+# Private methods: _leading_underscore
+def _internal_helper():
+    pass
+
+# Models: Descriptive names with suffix
+class UserInput(BaseModel):
+    pass
+
+class UserOutput(BaseModel):
+    pass
+```
+
+## Type Safety
+
+### Use Type Hints
+
+Always use type hints for functions and variables:
+
+```python
+from typing import Optional, List, Dict
+
+def process_data(
+    items: List[str],
+    config: Optional[Dict[str, str]] = None
+) -> Dict[str, int]:
+    """Process data and return results."""
+    result: Dict[str, int] = {}
+    for item in items:
+        result[item] = len(item)
+    return result
+```
+
+### Pydantic Models
+
+Use Pydantic models for all data structures:
+
+```python
+from pydantic import BaseModel, Field, field_validator
+
+class UserData(BaseModel):
+    """User data model with validation."""
+    
+    name: str = Field(
+        min_length=1,
+        max_length=100,
+        description="User name"
+    )
+    email: str = Field(
+        pattern=r"^[^@]+@[^@]+\.[^@]+$",
+        description="User email"
+    )
+    age: int = Field(
+        ge=0,
+        le=150,
+        description="User age"
+    )
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validate name format."""
+        if not v.strip():
+            raise ValueError('Name cannot be empty')
+        return v.strip()
+```
+
+### Static Type Checking
+
+Run mypy for static type checking:
+
+```bash
+# Check types
+uv run mypy src/
+
+# Check specific file
+uv run mypy src/mcp/tools/my_tool.py
+
+# Generate coverage report
+uv run mypy src/ --html-report mypy-report
+```
+
+## Error Handling
+
+### Graceful Error Handling
+
+Always handle errors gracefully:
+
+```python
+from typing import Optional
+
+class ToolOutput(BaseModel):
+    """Output with error handling."""
+    success: bool = Field(description="Whether operation succeeded")
+    data: Optional[dict] = Field(default=None, description="Result data")
+    error: Optional[str] = Field(default=None, description="Error message")
+    error_code: Optional[str] = Field(default=None, description="Error code")
+
+@mcp_factory.get().tool()
+def my_tool(input: MyInput) -> ToolOutput:
+    """Tool with comprehensive error handling."""
+    try:
+        result = perform_operation(input)
+        return ToolOutput(success=True, data=result)
+    except ValueError as e:
+        return ToolOutput(
+            success=False,
+            error=str(e),
+            error_code="VALIDATION_ERROR"
+        )
+    except Exception as e:
+        return ToolOutput(
+            success=False,
+            error=f"Unexpected error: {str(e)}",
+            error_code="INTERNAL_ERROR"
+        )
+```
+
+### Logging Errors
+
+Log errors with context:
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+@mcp_factory.get().tool()
+def my_tool(input: MyInput) -> ToolOutput:
+    """Tool with logging."""
+    try:
+        logger.info(f"Processing tool with input: {input}")
+        result = perform_operation(input)
+        logger.info(f"Tool completed successfully")
+        return ToolOutput(success=True, data=result)
+    except Exception as e:
+        logger.error(
+            f"Tool failed with error: {str(e)}",
+            exc_info=True,
+            extra={"input": input.dict()}
+        )
+        return ToolOutput(success=False, error=str(e))
+```
+
+## Testing
+
+### Test Organization
+
+Organize tests to mirror source code:
+
+```
+test/
+├── unit_test/
+│   ├── mcp/
+│   │   ├── test_calculator.py
+│   │   └── test_database.py
+│   ├── web_server/
+│   │   ├── test_text_endpoint.py
+│   │   └── test_health_endpoint.py
+│   └── models/
+│       └── test_models.py
+└── integration_test/
+    └── test_server_integration.py
+```
+
+### Unit Testing
+
+Write focused unit tests:
+
+```python
+import pytest
+from src.mcp.models.input.calculator_input import CalculatorInput
+from src.mcp.tools.calculator import calculate
+
+class TestCalculator:
+    """Test calculator tool."""
+    
+    def test_simple_addition(self):
+        """Test simple addition."""
+        input_data = CalculatorInput(expression="2 + 2")
+        output = calculate(input_data)
+        
+        assert output.result == 4.0
+        assert output.error is None
+    
+    def test_division_by_zero(self):
+        """Test division by zero error handling."""
+        input_data = CalculatorInput(expression="1 / 0")
+        output = calculate(input_data)
+        
+        assert output.success is False
+        assert output.error is not None
+    
+    @pytest.mark.parametrize("expression,expected", [
+        ("2 + 2", 4.0),
+        ("10 - 3", 7.0),
+        ("3 * 4", 12.0),
+        ("10 / 2", 5.0),
+    ])
+    def test_arithmetic_operations(self, expression, expected):
+        """Test various arithmetic operations."""
+        input_data = CalculatorInput(expression=expression)
+        output = calculate(input_data)
+        
+        assert output.result == expected
+```
+
+### Integration Testing
+
+Test component interactions:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from src.web_server import web_factory
+from src.mcp import mcp_factory
+
+@pytest.fixture
+def client():
+    """Create test client."""
+    web_factory.reset()
+    mcp_factory.reset()
+    
+    app = web_factory.create()
+    mcp_factory.create()
+    
+    yield TestClient(app)
+    
+    web_factory.reset()
+    mcp_factory.reset()
+
+def test_server_integration(client):
+    """Test integrated server."""
+    # Test health endpoint
+    response = client.get("/health")
+    assert response.status_code == 200
+    
+    # Test API endpoint
+    response = client.post(
+        "/api/text/process",
+        json={"text": "hello", "operation": "uppercase"}
+    )
+    assert response.status_code == 200
+```
+
+### Test Coverage
+
+Ensure good test coverage:
+
+```bash
+# Run tests with coverage
+uv run pytest --cov=src --cov-report=html --cov-report=term
+
+# View coverage report
+open htmlcov/index.html
+
+# Set minimum coverage threshold
+uv run pytest --cov=src --cov-fail-under=80
+```
+
+## Documentation
+
+### Code Documentation
+
+Write clear docstrings:
+
+```python
+def process_user_data(
+    user_id: int,
+    data: Dict[str, str]
+) -> Dict[str, Any]:
+    """
+    Process user data and return results.
+    
+    This function validates user data, performs processing,
+    and returns the results in a standardized format.
+    
+    Args:
+        user_id: The ID of the user to process
+        data: Dictionary containing user data to process
+    
+    Returns:
+        Dictionary with processed results containing:
+        - 'success': Boolean indicating success
+        - 'data': Processed data (if successful)
+        - 'error': Error message (if failed)
+    
+    Raises:
+        ValueError: If user_id is invalid
+        TypeError: If data is not a dictionary
+    
+    Examples:
+        >>> result = process_user_data(1, {"name": "John"})
+        >>> result['success']
+        True
+    """
+    # Implementation...
+```
+
+### Model Documentation
+
+Document Pydantic models:
+
+```python
+class UserInput(BaseModel):
+    """
+    User input model for processing.
+    
+    This model validates user input data before processing.
+    All fields are required unless marked as optional.
+    
+    Attributes:
+        name: User's full name (1-100 characters)
+        email: User's email address (valid email format)
+        age: User's age (0-150 years)
+    
+    Examples:
+        >>> user = UserInput(
+        ...     name="John Doe",
+        ...     email="john@example.com",
+        ...     age=30
+        ... )
+    """
+    
+    name: str = Field(
+        min_length=1,
+        max_length=100,
+        description="User's full name"
+    )
+    email: str = Field(
+        pattern=r"^[^@]+@[^@]+\.[^@]+$",
+        description="User's email address"
+    )
+    age: int = Field(
+        ge=0,
+        le=150,
+        description="User's age in years"
+    )
+```
+
+### README Documentation
+
+Keep README updated with:
+
+- Project description
+- Installation instructions
+- Quick start guide
+- Feature list
+- Contributing guidelines
+- License information
+
+## Performance
+
+### Caching
+
+Implement caching for expensive operations:
+
+```python
+from functools import lru_cache
+from cachetools import TTLCache
+import time
+
+# In-memory cache with TTL
+cache = TTLCache(maxsize=1000, ttl=3600)
+
+@lru_cache(maxsize=128)
+def expensive_computation(param: str) -> str:
+    """Cached computation."""
+    time.sleep(1)  # Simulate expensive operation
+    return f"Result for {param}"
+
+# Use cache
+result = expensive_computation("key")
+```
+
+### Async Operations
+
+Use async for I/O-bound operations:
+
+```python
+import asyncio
+from fastapi import APIRouter
+
+router = APIRouter()
+
+async def fetch_data_1():
+    """Simulate async I/O."""
+    await asyncio.sleep(1)
+    return "data1"
+
+async def fetch_data_2():
+    """Simulate async I/O."""
+    await asyncio.sleep(1)
+    return "data2"
+
+@router.get("/combined")
+async def get_combined_data():
+    """Fetch multiple data sources concurrently."""
+    results = await asyncio.gather(
+        fetch_data_1(),
+        fetch_data_2(),
+    )
+    return {"results": results}
+```
+
+### Database Query Optimization
+
+```python
+# Use indexes
+CREATE INDEX idx_user_email ON users(email);
+CREATE INDEX idx_created_at ON users(created_at);
+
+# Use connection pooling
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+engine = create_engine(
+    "postgresql://user:password@localhost/db",
+    poolclass=QueuePool,
+    pool_size=20,
+    max_overflow=40,
+)
+
+# Avoid N+1 queries
+# Use eager loading
+from sqlalchemy.orm import joinedload
+
+users = session.query(User).options(
+    joinedload(User.posts)
+).all()
+```
+
+## Security
+
+### Input Validation
+
+Always validate input:
+
+```python
+from pydantic import BaseModel, Field, validator
+
+class SecureInput(BaseModel):
+    """Input with security validation."""
+    
+    username: str = Field(
+        min_length=3,
+        max_length=50,
+        pattern=r"^[a-zA-Z0-9_]+$",
+        description="Username (alphanumeric and underscore only)"
+    )
+    password: str = Field(
+        min_length=8,
+        description="Password (minimum 8 characters)"
+    )
+    
+    @validator('password')
+    def validate_password_strength(cls, v):
+        """Validate password strength."""
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain uppercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain digit')
+        if not any(c in '!@#$%^&*' for c in v):
+            raise ValueError('Password must contain special character')
+        return v
+```
+
+### Environment Variables
+
+Never hardcode sensitive data:
+
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    """Settings loaded from environment variables."""
+    
+    api_key: str  # Required
+    database_url: str  # Required
+    debug: bool = False  # Optional with default
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+# Usage
+settings = Settings()
+```
+
+### CORS Configuration
+
+Configure CORS properly:
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://yourdomain.com"],  # Specific origins
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],  # Specific methods
+    allow_headers=["Content-Type"],  # Specific headers
+)
+```
+
+## Monitoring
+
+### Structured Logging
+
+Use structured logging:
+
+```python
+import logging
+import json
+
+logger = logging.getLogger(__name__)
+
+# Log with context
+logger.info("Tool executed", extra={
+    "tool_name": "my_tool",
+    "execution_time": 0.5,
+    "status": "success",
+    "user_id": 123
+})
+```
+
+### Health Checks
+
+Implement comprehensive health checks:
+
+```python
+from fastapi import APIRouter
+from datetime import datetime
+
+router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    """Basic health check."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "0.1.0"
+    }
+
+@router.get("/health/ready")
+async def readiness_check():
+    """Readiness check for load balancers."""
+    try:
+        # Check database connection
+        # Check cache connection
+        # Check external services
+        return {"ready": True}
+    except Exception as e:
+        return {"ready": False, "error": str(e)}
+```
+
+## Version Control
+
+### Commit Messages
+
+Write clear commit messages:
+
+```
+# Good
+feat: Add calculator tool for mathematical operations
+fix: Handle division by zero in calculator
+docs: Update deployment guide
+
+# Bad
+update
+fix bug
+changes
+```
+
+### Branch Strategy
+
+Use feature branches:
+
+```bash
+# Create feature branch
+git checkout -b feature/add-calculator-tool
+
+# Make changes and commit
+git add .
+git commit -m "feat: Add calculator tool"
+
+# Push and create pull request
+git push origin feature/add-calculator-tool
+```
+
+## Dependency Management
+
+### Keep Dependencies Updated
+
+```bash
+# Check for outdated dependencies
+uv pip list --outdated
+
+# Update specific dependency
+uv add requests@latest
+
+# Update all dependencies
+uv sync --upgrade
+```
+
+### Lock File
+
+Always commit lock file:
+
+```bash
+# Lock file ensures reproducible builds
+git add uv.lock
+git commit -m "Update dependencies"
+```
+
+## Continuous Integration
+
+### GitHub Actions
+
+Configure CI/CD workflows:
+
+```yaml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Run tests
+        run: uv run pytest --cov=src
+      
+      - name: Type checking
+        run: uv run mypy src/
+      
+      - name: Linting
+        run: uv run pylint src/
+```
+
+## Checklist
+
+Before committing code:
+
+- [ ] Code follows naming conventions
+- [ ] Type hints are present
+- [ ] Docstrings are complete
+- [ ] Tests are written and passing
+- [ ] Error handling is comprehensive
+- [ ] No hardcoded secrets
+- [ ] Code is formatted with black
+- [ ] Linting passes (pylint)
+- [ ] Type checking passes (mypy)
+- [ ] Test coverage is adequate
+- [ ] Documentation is updated
+- [ ] Commit message is clear

@@ -5,8 +5,8 @@ import remarkGfm from 'remark-gfm';
 import remarkMdxCodeMeta from 'remark-mdx-code-meta';
 
 const config: Config = {
-  title: 'mcp-server-template',
-  tagline: '🐍 Just a template of Python bases and UV managed MCP server project.',
+  title: 'MCP Server Template',
+  tagline: '🐍 A comprehensive Python MCP server template with UV package management and modern development practices.',
   favicon: 'img/python_logo_icon.png',
 
   // Set the production url of your site here
@@ -120,7 +120,7 @@ const config: Config = {
         // Options for docusaurus-search-local
         hashed: true,
         language: ['en'],
-        docsRouteBasePath: ['/uv-template'],
+        docsRouteBasePath: ['/docs', '/dev'],
         docsDir: ['./contents/document', './contents/development'],
         blogDir: ['./contents/blog'],
         highlightSearchTermsOnTargetPage: true,
@@ -141,9 +141,9 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/python_logo_icon.png',
     navbar: {
-      title: 'UV-Template',
+      title: 'MCP Server Template',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'MCP Server Template Logo',
         src: 'img/python_logo_icon.png',
       },
       items: [
@@ -231,7 +231,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright ${new Date().getFullYear()} - PRESENT, mcp-server-template is owned by <a href="https://github.com/Chisanan232">@Chisanan232</a>.<br />Built with <a href="https://docusaurus.io/">Docusaurus</a>.`,
+      copyright: `Copyright ${new Date().getFullYear()} - PRESENT, MCP Server Template is owned by <a href="https://github.com/Chisanan232">@Chisanan232</a>.<br />Built with <a href="https://docusaurus.io/">Docusaurus</a>.`,
     },
     prism: {
       theme: prismThemes.github,

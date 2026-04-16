@@ -1,0 +1,941 @@
+---
+id: usage-guide
+title: Usage Guide
+sidebar_position: 3
+---
+
+# MCP Server Template Usage Guide
+
+This guide demonstrates how to use the MCP server template to build and run your own MCP server with custom tools.
+
+## Running the Server
+
+### Standalone Mode
+
+Run the MCP server with a specific transport:
+
+```bash
+# Run with SSE transport (default)
+uv run python -m src.entry --mcp-transport sse
+
+# Run with HTTP streaming transport
+uv run python -m src.entry --mcp-transport streamable-http
+
+# Run with stdio transport
+uv run python -m src.entry --mcp-transport stdio
+
+# Run with custom port
+uv run python -m src.entry --port 8001
+
+# Run with custom log level
+uv run python -m src.entry --log-level DEBUG
+```
+
+### Integrated Mode
+
+Run both MCP server and web server together:
+
+```bash
+# Run integrated server
+uv run python -m src.entry --integrated
+
+# Run integrated with custom settings
+uv run python -m src.entry --integrated --port 8000 --mcp-transport sse
+
+# Run with custom MCP mount path
+uv run python -m src.entry --integrated --mcp-mount-path /api/mcp
+```
+
+### Environment Configuration
+
+Create a `.env` file for configuration:
+
+```bash
+# .env
+MCP_SERVER_NAME=my-mcp-server
+MCP_SERVER_VERSION=0.1.0
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+LOG_LEVEL=INFO
+CORS_ALLOW_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+```
+
+Load environment variables:
+
+```bash
+# Load from .env file
+export $(cat .env | xargs)
+uv run python -m src.entry
+```
+
+## Adding Custom MCP Tools
+
+### Step 1: Create Input Model
+
+Create a new file `src/mcp/models/input/my_tool_input.py`:
+
+```python
+from pydantic import BaseModel, Field
+
+class MyToolInput(BaseModel):
+    """Input parameters for my custom tool."""
+    
+    query: str = Field(
+        description="The query to process",
+        examples=["example query"]
+    )
+    max_results: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum number of results to return"
+    )
+```
+
+### Step 2: Create Output Model
+
+Create a new file `src/mcp/models/output/my_tool_output.py`:
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class MyToolOutput(BaseModel):
+    """Output from my custom tool."""
+    
+    results: list[str] = Field(
+        description="List of results"
+    )
+    count: int = Field(
+        description="Number of results returned"
+    )
+    error: Optional[str] = Field(
+        default=None,
+        description="Error message if operation failed"
+    )
+```
+
+### Step 3: Implement the Tool
+
+Create a new file `src/mcp/tools/my_tool.py`:
+
+```python
+from src.mcp import mcp_factory
+from src.mcp.models.input.my_tool_input import MyToolInput
+from src.mcp.models.output.my_tool_output import MyToolOutput
+
+@mcp_factory.get().tool()
+def my_custom_tool(input: MyToolInput) -> MyToolOutput:
+    """
+    Process a query and return results.
+    
+    This tool demonstrates how to implement a custom MCP tool.
+    """
+    try:
+        # Your implementation here
+        results = [f"Result {i+1}" for i in range(min(input.max_results, 5))]
+        
+        return MyToolOutput(
+            results=results,
+            count=len(results)
+        )
+    except Exception as e:
+        return MyToolOutput(
+            results=[],
+            count=0,
+            error=str(e)
+        )
+```
+
+### Step 4: Register the Tool
+
+Import the tool in `src/mcp/__init__.py`:
+
+```python
+# src/mcp/__init__.py
+from .app import MCPServerFactory, mcp_factory
+from .tools import my_tool  # Import to register
+
+__all__ = [
+    "MCPServerFactory",
+    "mcp_factory",
+]
+```
+
+### Step 5: Test the Tool
+
+Create a test file `test/unit_test/mcp/test_my_tool.py`:
+
+```python
+import pytest
+from src.mcp.models.input.my_tool_input import MyToolInput
+from src.mcp.models.output.my_tool_output import MyToolOutput
+from src.mcp.tools.my_tool import my_custom_tool
+
+def test_my_custom_tool_success():
+    """Test successful tool execution."""
+    input_data = MyToolInput(query="test query", max_results=5)
+    output = my_custom_tool(input_data)
+    
+    assert output.count == 5
+    assert len(output.results) == 5
+    assert output.error is None
+
+def test_my_custom_tool_max_results():
+    """Test max results constraint."""
+    input_data = MyToolInput(query="test", max_results=3)
+    output = my_custom_tool(input_data)
+    
+    assert output.count == 3
+    assert len(output.results) == 3
+```
+
+## Adding Custom Web API Endpoints
+
+### Step 1: Create Request Model
+
+Create `src/web_server/models/request/my_request.py`:
+
+```python
+from pydantic import BaseModel, Field
+
+class MyRequest(BaseModel):
+    """Request model for my custom endpoint."""
+    
+    name: str = Field(
+        description="Name parameter",
+        min_length=1,
+        max_length=100
+    )
+    value: int = Field(
+        default=0,
+        ge=0,
+        description="Value parameter"
+    )
+```
+
+### Step 2: Create Response Model
+
+Create `src/web_server/models/response/my_response.py`:
+
+```python
+from pydantic import BaseModel, Field
+from datetime import datetime
+
+class MyResponse(BaseModel):
+    """Response model for my custom endpoint."""
+    
+    message: str = Field(description="Response message")
+    processed_at: datetime = Field(description="Processing timestamp")
+    status: str = Field(description="Operation status")
+```
+
+### Step 3: Create Router
+
+Create `src/web_server/routers/my_router.py`:
+
+```python
+from fastapi import APIRouter, HTTPException
+from src.web_server.models.request.my_request import MyRequest
+from src.web_server.models.response.my_response import MyResponse
+from datetime import datetime
+
+router = APIRouter(prefix="/api/custom", tags=["custom"])
+
+@router.post("/process", response_model=MyResponse, status_code=200)
+async def process_data(request: MyRequest) -> MyResponse:
+    """
+    Process custom data.
+    
+    This endpoint demonstrates how to implement a custom API endpoint.
+    """
+    try:
+        # Your implementation here
+        message = f"Processed {request.name} with value {request.value}"
+        
+        return MyResponse(
+            message=message,
+            processed_at=datetime.now(),
+            status="success"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Processing failed: {str(e)}"
+        )
+
+@router.get("/status", response_model=MyResponse)
+async def get_status() -> MyResponse:
+    """Get endpoint status."""
+    return MyResponse(
+        message="Endpoint is operational",
+        processed_at=datetime.now(),
+        status="healthy"
+    )
+```
+
+### Step 4: Register Router
+
+In your server initialization (e.g., in `src/web_server/app.py` or main entry point):
+
+```python
+from src.web_server import web_factory
+from src.web_server.routers.my_router import router
+
+# Register router with web server
+app = web_factory.get()
+app.include_router(router)
+```
+
+### Step 5: Test the Endpoint
+
+Create `test/unit_test/web_server/test_my_endpoint.py`:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from src.web_server import web_factory
+
+@pytest.fixture
+def client():
+    web_factory.reset()
+    app = web_factory.create()
+    yield TestClient(app)
+    web_factory.reset()
+
+def test_process_data(client):
+    """Test custom endpoint."""
+    response = client.post(
+        "/api/custom/process",
+        json={"name": "test", "value": 42}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "test" in data["message"]
+
+def test_get_status(client):
+    """Test status endpoint."""
+    response = client.get("/api/custom/status")
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+```
+
+## Configuration and Customization
+
+### Customizing Server Configuration
+
+Edit `src/config.py` to add custom settings:
+
+```python
+from pydantic_settings import BaseSettings
+
+class ServerConfig(BaseSettings):
+    """Server configuration."""
+    
+    # Existing settings...
+    
+    # Add custom settings
+    custom_api_key: str = ""
+    custom_timeout: int = 30
+    custom_feature_enabled: bool = True
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+```
+
+### Using Configuration in Tools
+
+```python
+from src.config import get_settings
+
+@mcp_factory.get().tool()
+def my_tool_with_config(input: MyToolInput) -> MyToolOutput:
+    """Tool that uses configuration."""
+    settings = get_settings()
+    
+    # Use configuration
+    timeout = settings.custom_timeout
+    api_key = settings.custom_api_key
+    
+    # Implementation...
+```
+
+## Deployment
+
+### Docker Deployment
+
+Build and run with Docker:
+
+```bash
+# Build Docker image
+docker build -t my-mcp-server .
+
+# Run container
+docker run -p 8000:8000 \
+  -e SERVER_PORT=8000 \
+  -e LOG_LEVEL=INFO \
+  my-mcp-server
+
+# Run with environment file
+docker run -p 8000:8000 \
+  --env-file .env \
+  my-mcp-server
+```
+
+### Production Deployment
+
+For production, use a production ASGI server:
+
+```bash
+# Install production server
+uv add gunicorn
+
+# Run with gunicorn
+uv run gunicorn \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 \
+  src.entry:app
+```
+
+### Health Checks
+
+Monitor server health:
+
+```bash
+# Check health endpoint
+curl http://localhost:8000/health
+
+# Expected response
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "version": "0.1.0"
+}
+```
+
+## Debugging
+
+### Enable Debug Logging
+
+```bash
+# Run with debug logging
+uv run python -m src.entry --log-level DEBUG
+
+# Or set environment variable
+export LOG_LEVEL=DEBUG
+uv run python -m src.entry
+```
+
+### Inspect Server State
+
+```python
+from src.mcp import mcp_factory
+from src.web_server import web_factory
+
+# Get MCP server
+mcp_server = mcp_factory.get()
+print(f"MCP Server: {mcp_server}")
+
+# Get web app
+web_app = web_factory.get()
+print(f"Web App: {web_app}")
+print(f"Routes: {web_app.routes}")
+```
+
+### Test Individual Components
+
+```bash
+# Test MCP server only
+uv run python -m src.entry --mcp-transport stdio
+
+# Test web server only
+uv run python -m src.entry --web-only
+
+# Test with specific configuration
+uv run python -c "
+from src.config import get_settings
+settings = get_settings()
+print(settings)
+"
+```
+
+## Performance Optimization
+
+### Caching
+
+Implement caching for expensive operations:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def expensive_operation(param: str) -> str:
+    """Cached operation."""
+    # Implementation...
+    return result
+```
+
+### Async Operations
+
+Use async for I/O-bound operations:
+
+```python
+import asyncio
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/async-endpoint")
+async def async_endpoint():
+    """Async endpoint for concurrent operations."""
+    results = await asyncio.gather(
+        fetch_data_1(),
+        fetch_data_2(),
+        fetch_data_3(),
+    )
+    return {"results": results}
+
+async def fetch_data_1():
+    """Simulate async I/O."""
+    await asyncio.sleep(1)
+    return "data1"
+```
+
+### Connection Pooling
+
+For database connections:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+engine = create_engine(
+    "postgresql://user:password@localhost/db",
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
+)
+```
+
+## Monitoring and Logging
+
+### Structured Logging
+
+```python
+import logging
+from pythonjsonlogger import jsonlogger
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# Use structured logging
+logger.info("Tool executed", extra={
+    "tool_name": "my_tool",
+    "execution_time": 0.5,
+    "status": "success"
+})
+```
+
+### Metrics Collection
+
+```python
+from prometheus_client import Counter, Histogram
+
+tool_calls = Counter(
+    'tool_calls_total',
+    'Total tool calls',
+    ['tool_name', 'status']
+)
+
+tool_duration = Histogram(
+    'tool_duration_seconds',
+    'Tool execution duration',
+    ['tool_name']
+)
+
+# Use metrics
+tool_calls.labels(tool_name="my_tool", status="success").inc()
+```
+
+## Extending the Template with Sub-Packages
+
+The MCP Server Template provides several empty sub-packages designed for child projects to extend functionality. These packages follow best practices for modular development and provide clear extension points.
+
+### MCP Tools Package (`src/mcp/tools/`)
+
+The tools package is where you implement custom MCP (Model Context Protocol) tools that AI models can use.
+
+#### What to Implement Here:
+- **Custom MCP Tools**: Functions that AI models can call
+- **Tool Logic**: Business logic for specific operations
+- **Data Processing**: Transform and analyze data for AI consumption
+
+#### Structure:
+```text
+src/mcp/tools/
+├── __init__.py              # Package documentation and imports
+├── calculator.py            # Mathematical calculation tools
+├── database.py              # Database query tools
+├── file_operations.py       # File system tools
+└── api_client.py            # External API integration tools
+```
+
+#### Example Implementation:
+```python
+# src/mcp/tools/calculator.py
+from fastmcp import Tool
+from src.mcp.models.input.calculator_input import CalculatorInput
+from src.mcp.models.output.calculator_output import CalculatorOutput
+
+@mcp_factory.get().tool()
+def calculate(input: CalculatorInput) -> CalculatorOutput:
+    """Perform mathematical calculations safely."""
+    try:
+        # Safe evaluation (avoid eval() for security)
+        result = safe_eval(input.expression)
+        rounded_result = round(result, input.precision)
+        
+        return CalculatorOutput(
+            result=rounded_result,
+            expression=input.expression,
+            precision=input.precision
+        )
+    except Exception as e:
+        return CalculatorError(
+            expression=input.expression,
+            error=str(e),
+            error_type="CalculationError"
+        )
+```
+
+#### Integration:
+```python
+# Import in src/mcp/tools/__init__.py
+from .calculator import calculate
+from .database import query_database
+```
+
+### Web Server Dependencies Package (`src/web_server/dependencies/`)
+
+The dependencies package manages external service connections, databases, caches, and third-party integrations.
+
+#### What to Implement Here:
+- **Database Connections**: SQLAlchemy setup and session management
+- **Cache Services**: Redis or other caching implementations
+- **External APIs**: HTTP clients for third-party services
+- **Authentication**: OAuth providers and JWT validation
+
+#### Structure:
+```text
+src/web_server/dependencies/
+├── __init__.py              # Package documentation and imports
+├── database.py              # Database connections and ORM setup
+├── cache.py                 # Redis or other caching services
+├── auth.py                  # Authentication service integrations
+└── storage.py               # File storage services (S3, etc.)
+```
+
+#### Example Implementation:
+```python
+# src/web_server/dependencies/database.py
+import logging
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from src.config import get_settings
+
+class DatabaseDependency:
+    """Manages database connections and sessions."""
+    
+    def __init__(self):
+        self.settings = get_settings()
+        self._engine = None
+        self._async_engine = None
+    
+    @property
+    def async_engine(self):
+        """Get asynchronous database engine."""
+        if self._async_engine is None:
+            self._async_engine = create_async_engine(
+                self.settings.async_database_url,
+                pool_size=self.settings.db_pool_size,
+                echo=self.settings.db_echo
+            )
+        return self._async_engine
+    
+    async def get_async_session(self) -> AsyncSession:
+        """Get an async database session."""
+        async with async_sessionmaker(bind=self.async_engine)() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+# Global instance
+db_dependency = DatabaseDependency()
+```
+
+#### Integration:
+```python
+# Import in src/web_server/dependencies/__init__.py
+from .database import db_dependency
+from .cache import cache_dependency
+```
+
+### Web Server Services Package (`src/web_server/services/`)
+
+The services package contains business logic, service layer components, and application-specific services.
+
+#### What to Implement Here:
+- **Business Logic**: Core application rules and workflows
+- **Service Layer**: Abstract complex operations and external integrations
+- **Data Processing**: Transform and process data between layers
+- **Orchestration**: Coordinate multiple dependencies and operations
+
+#### Structure:
+```text
+src/web_server/services/
+├── __init__.py              # Package documentation and imports
+├── user_service.py          # User management and authentication
+├── data_service.py          # Data processing and analysis
+├── notification_service.py  # Notification and messaging
+└── file_service.py          # File upload/download and processing
+```
+
+#### Example Implementation:
+```python
+# src/web_server/services/user_service.py
+import logging
+from typing import Optional
+from fastapi import Depends
+from src.web_server.dependencies.database import db_dependency
+from src.web_server.models.request.user import UserCreateRequest
+from src.web_server.models.response.user import UserResponse
+
+class UserService:
+    """Service for user management operations."""
+    
+    def __init__(self, session: AsyncSession = Depends(db_dependency.get_async_session)):
+        self.session = session
+    
+    async def create_user(self, user_data: UserCreateRequest) -> UserResponse:
+        """Create a new user account."""
+        try:
+            # Check if user already exists
+            existing_user = await self._find_user_by_email(user_data.email)
+            if existing_user:
+                raise UserAlreadyExistsError(f"User {user_data.email} already exists")
+            
+            # Create new user
+            user = UserDTO(
+                email=user_data.email,
+                username=user_data.username,
+                password_hash=self._hash_password(user_data.password)
+            )
+            
+            self.session.add(user)
+            await self.session.commit()
+            await self.session.refresh(user)
+            
+            return UserResponse.from_dto(user)
+            
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Failed to create user: {e}")
+            raise
+```
+
+#### Integration:
+```python
+# Import in src/web_server/services/__init__.py
+from .user_service import UserService
+from .data_service import DataService
+```
+
+### Web Server Routers Package (`src/web_server/routers/`)
+
+The routers package contains FastAPI route definitions, API endpoints, and HTTP route handlers.
+
+#### What to Implement Here:
+- **API Endpoints**: RESTful API routes for different resources
+- **HTTP Handlers**: Request/response logic
+- **Route Organization**: Group related endpoints in separate routers
+- **API Documentation**: Auto-generate OpenAPI/Swagger documentation
+
+#### Structure:
+```text
+src/web_server/routers/
+├── __init__.py              # Package documentation and imports
+├── health.py                # Health check and status endpoints
+├── users.py                 # User management endpoints
+├── data.py                  # Data processing and analysis endpoints
+└── files.py                 # File upload/download endpoints
+```
+
+#### Example Implementation:
+```python
+# src/web_server/routers/users.py
+from fastapi import APIRouter, Depends, HTTPException
+from src.web_server.services.user_service import UserService
+from src.web_server.models.request.user import UserCreateRequest
+from src.web_server.models.response.user import UserResponse
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+@router.post("/", response_model=UserResponse, status_code=201)
+async def create_user(
+    user_data: UserCreateRequest,
+    user_service: UserService = Depends()
+) -> UserResponse:
+    """Create a new user account."""
+    try:
+        return await user_service.create_user(user_data)
+    except UserService.UserAlreadyExistsError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    user_service: UserService = Depends()
+) -> UserResponse:
+    """Get user by ID."""
+    user = await user_service.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+
+#### Integration:
+```python
+# Import in src/web_server/routers/__init__.py
+from .users import router as users_router
+from .health import router as health_router
+
+# Include in main FastAPI app
+from fastapi import FastAPI
+app = FastAPI()
+app.include_router(users_router)
+app.include_router(health_router)
+```
+
+### Putting It All Together
+
+Here's how all the sub-packages work together in a complete example:
+
+```python
+# 1. Define models (src/models/dto/user.py)
+class UserDTO(BaseModel):
+    id: Optional[int] = None
+    email: str
+    username: str
+    password_hash: str
+    created_at: datetime
+    updated_at: datetime
+
+# 2. Create dependency (src/web_server/dependencies/database.py)
+class DatabaseDependency:
+    def get_async_session(self) -> AsyncSession:
+        # Database session management
+        pass
+
+# 3. Implement service (src/web_server/services/user_service.py)
+class UserService:
+    def __init__(self, session: AsyncSession = Depends(db_dependency.get_async_session)):
+        self.session = session
+    
+    async def create_user(self, user_data: UserCreateRequest) -> UserResponse:
+        # Business logic for user creation
+        pass
+
+# 4. Create router (src/web_server/routers/users.py)
+@router.post("/", response_model=UserResponse)
+async def create_user(
+    user_data: UserCreateRequest,
+    user_service: UserService = Depends()
+) -> UserResponse:
+    return await user_service.create_user(user_data)
+
+# 5. Add MCP tool (src/mcp/tools/user_tools.py)
+@mcp_factory.get().tool()
+def create_user_via_mcp(input: UserCreateInput) -> UserOutput:
+    # MCP tool that uses the same service
+    user_service = UserService()
+    return user_service.create_user(UserCreateRequest(**input.dict()))
+```
+
+### Development Workflow
+
+1. **Start with Models**: Define your data structures in `src/models/`
+2. **Add Dependencies**: Set up external connections in `src/web_server/dependencies/`
+3. **Implement Services**: Write business logic in `src/web_server/services/`
+4. **Create Routers**: Build API endpoints in `src/web_server/routers/`
+5. **Add MCP Tools**: Implement AI-accessible tools in `src/mcp/tools/`
+6. **Update Imports**: Add imports to each package's `__init__.py`
+7. **Write Tests**: Test each layer independently
+8. **Integration**: Connect everything in the main application
+
+### Best Practices
+
+1. **Separation of Concerns**: Each package has a clear responsibility
+2. **Dependency Injection**: Use FastAPI's DI system throughout
+3. **Type Safety**: Use Pydantic models for all data structures
+4. **Error Handling**: Implement consistent error handling patterns
+5. **Testing**: Mock dependencies for unit testing
+6. **Documentation**: Include comprehensive docstrings and examples
+7. **Configuration**: Use environment variables for all settings
+8. **Async Support**: Use async/await for I/O operations
+
+This modular structure allows child projects to easily extend the template while maintaining clean architecture and separation of concerns.
+
+### Common Issues
+
+**Issue: Port already in use**
+```bash
+# Find and kill process using port
+lsof -i :8000
+kill -9 <PID>
+
+# Or use different port
+uv run python -m src.entry --port 8001
+```
+
+**Issue: Import errors**
+```bash
+# Reinstall dependencies
+uv sync
+
+# Clear cache
+rm -rf .venv
+uv sync
+```
+
+**Issue: Configuration not loading**
+```bash
+# Check .env file exists
+ls -la .env
+
+# Verify environment variables
+env | grep SERVER
+```
+
+**Issue: Tests failing**
+```bash
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test
+uv run pytest test/unit_test/mcp/test_my_tool.py -v
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=html
+```

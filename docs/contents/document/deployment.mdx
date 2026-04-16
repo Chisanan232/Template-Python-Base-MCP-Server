@@ -1,0 +1,685 @@
+---
+id: deployment
+title: Deployment Guide
+sidebar_position: 5
+---
+
+# Deployment Guide
+
+This guide covers deploying your MCP server to various environments.
+
+## Local Development
+
+### Setup Development Environment
+
+```bash
+# Clone repository
+git clone https://github.com/YOUR-USERNAME/YOUR-PROJECT.git
+cd YOUR-PROJECT
+
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies
+uv sync
+
+# Run development server
+uv run python -m src.entry --integrated --port 8000
+```
+
+### Development Server Features
+
+- **Auto-reload**: Code changes automatically reload the server
+- **Debug logging**: Detailed logging for troubleshooting
+- **API documentation**: Swagger UI at `/docs`
+- **Hot reload**: FastAPI development server with hot reload
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=html
+
+# Run specific test file
+uv run pytest test/unit_test/mcp/test_calculator.py -v
+
+# Run with markers
+uv run pytest -m "not slow"
+```
+
+## Docker Deployment
+
+### Build Docker Image
+
+Create `Dockerfile`:
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Copy project files
+COPY . .
+
+# Install dependencies
+RUN /root/.cargo/bin/uv sync --no-dev
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+# Run server
+CMD ["/root/.cargo/bin/uv", "run", "python", "-m", "src.entry", "--integrated"]
+```
+
+### Build and Run
+
+```bash
+# Build image
+docker build -t my-mcp-server:latest .
+
+# Run container
+docker run -p 8000:8000 \
+  -e SERVER_PORT=8000 \
+  -e LOG_LEVEL=INFO \
+  my-mcp-server:latest
+
+# Run with environment file
+docker run -p 8000:8000 \
+  --env-file .env \
+  my-mcp-server:latest
+
+# Run with volume mount
+docker run -p 8000:8000 \
+  -v $(pwd)/.env:/app/.env \
+  my-mcp-server:latest
+```
+
+### Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8000
+      LOG_LEVEL: INFO
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Optional: Add database service
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+```
+
+Run with Docker Compose:
+
+```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f mcp-server
+
+# Stop services
+docker-compose down
+```
+
+## Cloud Deployment
+
+### AWS ECS
+
+Create `ecs-task-definition.json`:
+
+```json
+{
+  "family": "mcp-server",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "mcp-server",
+      "image": "YOUR-ACCOUNT.dkr.ecr.YOUR-REGION.amazonaws.com/mcp-server:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SERVER_HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "SERVER_PORT",
+          "value": "8000"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mcp-server",
+          "awslogs-region": "YOUR-REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    }
+  ]
+}
+```
+
+Deploy to ECS:
+
+```bash
+# Register task definition
+aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
+
+# Create service
+aws ecs create-service \
+  --cluster my-cluster \
+  --service-name mcp-server \
+  --task-definition mcp-server \
+  --desired-count 2 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-xxx],securityGroups=[sg-xxx],assignPublicIp=ENABLED}"
+```
+
+### Google Cloud Run
+
+```bash
+# Build and push image
+gcloud builds submit --tag gcr.io/PROJECT-ID/mcp-server
+
+# Deploy to Cloud Run
+gcloud run deploy mcp-server \
+  --image gcr.io/PROJECT-ID/mcp-server \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars SERVER_PORT=8080
+```
+
+### Heroku
+
+Create `Procfile`:
+
+```
+web: uv run python -m src.entry --integrated
+```
+
+Deploy:
+
+```bash
+# Login to Heroku
+heroku login
+
+# Create app
+heroku create my-mcp-server
+
+# Set environment variables
+heroku config:set SERVER_PORT=8000
+heroku config:set LOG_LEVEL=INFO
+
+# Deploy
+git push heroku main
+
+# View logs
+heroku logs --tail
+```
+
+## Production Configuration
+
+### Environment Variables
+
+Create `.env.production`:
+
+```bash
+# Server Configuration
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+LOG_LEVEL=INFO
+
+# CORS Configuration
+CORS_ALLOW_ORIGINS=["https://yourdomain.com"]
+CORS_ALLOW_CREDENTIALS=true
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@db.example.com/mydb
+
+# API Configuration
+API_KEY=your-secret-key
+API_TIMEOUT=30
+
+# Security
+SECURE_COOKIES=true
+HTTPS_ONLY=true
+```
+
+### Production Server
+
+Use production ASGI server instead of development server:
+
+```bash
+# Install gunicorn
+uv add gunicorn
+
+# Run with gunicorn
+uv run gunicorn \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 \
+  --access-logfile - \
+  --error-logfile - \
+  src.entry:app
+```
+
+Or use Uvicorn directly:
+
+```bash
+uv run uvicorn \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --workers 4 \
+  --log-level info \
+  src.entry:app
+```
+
+### Reverse Proxy (Nginx)
+
+Create `nginx.conf`:
+
+```nginx
+upstream mcp_server {
+    server localhost:8000;
+}
+
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    # Redirect to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/ssl/certs/your-cert.crt;
+    ssl_certificate_key /etc/ssl/private/your-key.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Proxy Configuration
+    location / {
+        proxy_pass http://mcp_server;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://mcp_server;
+        access_log off;
+    }
+}
+```
+
+## Monitoring and Logging
+
+### Structured Logging
+
+Configure JSON logging for production:
+
+```python
+import logging
+import json
+from pythonjsonlogger import jsonlogger
+
+# Configure JSON logging
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# Use structured logging
+logger.info("Server started", extra={
+    "service": "mcp-server",
+    "version": "0.1.0",
+    "environment": "production"
+})
+```
+
+### Prometheus Metrics
+
+Add metrics collection:
+
+```bash
+# Install prometheus client
+uv add prometheus-client
+```
+
+```python
+from prometheus_client import Counter, Histogram, generate_latest
+from fastapi import FastAPI
+
+app = FastAPI()
+
+# Define metrics
+request_count = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+request_duration = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration',
+    ['method', 'endpoint']
+)
+
+# Metrics endpoint
+@app.get("/metrics")
+async def metrics():
+    return generate_latest()
+```
+
+### Health Checks
+
+Implement comprehensive health checks:
+
+```python
+from fastapi import APIRouter
+from datetime import datetime
+
+router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    """Basic health check."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "0.1.0"
+    }
+
+@router.get("/health/ready")
+async def readiness_check():
+    """Readiness check for load balancers."""
+    try:
+        # Check dependencies
+        # - Database connection
+        # - Cache connection
+        # - External services
+        return {"ready": True}
+    except Exception as e:
+        return {"ready": False, "error": str(e)}
+
+@router.get("/health/live")
+async def liveness_check():
+    """Liveness check for Kubernetes."""
+    return {"alive": True}
+```
+
+## Scaling
+
+### Horizontal Scaling
+
+Deploy multiple instances behind a load balancer:
+
+```bash
+# Docker Compose with multiple instances
+docker-compose up -d --scale mcp-server=3
+```
+
+### Load Balancing
+
+Use HAProxy for load balancing:
+
+```
+global
+    maxconn 4096
+
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server server1 localhost:8001
+    server server2 localhost:8002
+    server server3 localhost:8003
+```
+
+### Database Connection Pooling
+
+Configure connection pooling for database:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+engine = create_engine(
+    "postgresql://user:password@localhost/db",
+    poolclass=QueuePool,
+    pool_size=20,
+    max_overflow=40,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+)
+```
+
+## Backup and Recovery
+
+### Database Backups
+
+```bash
+# PostgreSQL backup
+pg_dump -h localhost -U user -d mydb > backup.sql
+
+# Restore from backup
+psql -h localhost -U user -d mydb < backup.sql
+
+# Automated backups with cron
+0 2 * * * pg_dump -h localhost -U user -d mydb | gzip > /backups/db-$(date +\%Y\%m\%d).sql.gz
+```
+
+### Configuration Backups
+
+```bash
+# Backup environment configuration
+cp .env .env.backup
+
+# Version control for non-sensitive config
+git add config/
+git commit -m "Backup configuration"
+```
+
+## Troubleshooting Deployment
+
+### Common Issues
+
+**Port Already in Use**
+```bash
+# Find process using port
+lsof -i :8000
+
+# Kill process
+kill -9 <PID>
+
+# Or use different port
+docker run -p 8001:8000 my-mcp-server
+```
+
+**Memory Issues**
+```bash
+# Monitor memory usage
+docker stats
+
+# Increase memory limit
+docker run -m 1g my-mcp-server
+```
+
+**Database Connection Issues**
+```bash
+# Test database connection
+python -c "
+from sqlalchemy import create_engine
+engine = create_engine('postgresql://user:password@host/db')
+with engine.connect() as conn:
+    print('Connected!')
+"
+```
+
+**SSL Certificate Issues**
+```bash
+# Check certificate validity
+openssl x509 -in cert.crt -text -noout
+
+# Renew certificate
+certbot renew
+```
+
+## Performance Optimization
+
+### Caching
+
+Implement caching for frequently accessed data:
+
+```python
+from functools import lru_cache
+from cachetools import TTLCache
+
+# In-memory cache
+cache = TTLCache(maxsize=1000, ttl=3600)
+
+@lru_cache(maxsize=128)
+def expensive_operation(param: str) -> str:
+    return result
+```
+
+### Database Query Optimization
+
+```python
+# Use indexes
+CREATE INDEX idx_user_email ON users(email);
+
+# Use connection pooling
+# Use query optimization
+# Avoid N+1 queries
+```
+
+### Response Compression
+
+```python
+from fastapi.middleware.gzip import GZIPMiddleware
+
+app.add_middleware(GZIPMiddleware, minimum_size=1000)
+```
+
+## Rollback Procedures
+
+### Blue-Green Deployment
+
+```bash
+# Deploy new version to green environment
+docker-compose -f docker-compose.green.yml up -d
+
+# Test green environment
+curl http://localhost:8001/health
+
+# Switch traffic to green
+# Update load balancer configuration
+
+# Keep blue environment running for quick rollback
+docker-compose -f docker-compose.blue.yml ps
+```
+
+### Rollback Steps
+
+```bash
+# If issues detected, switch back to blue
+# Update load balancer to route to blue environment
+
+# Investigate issue in green environment
+docker-compose -f docker-compose.green.yml logs
+
+# Fix issue and redeploy
+```
+
+## Checklist
+
+Before deploying to production:
+
+- [ ] All tests passing
+- [ ] Code reviewed
+- [ ] Security scan completed
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] SSL certificates valid
+- [ ] Monitoring configured
+- [ ] Backup strategy in place
+- [ ] Rollback plan documented
+- [ ] Load testing completed
+- [ ] Documentation updated

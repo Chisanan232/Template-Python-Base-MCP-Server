@@ -9,24 +9,24 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 ```
 
-# Customizing Your New Project
+# Setting Up Your MCP Server
 
-This guide explains how to customize and configure your new Python project after creating it from the template.
+This guide explains how to customize and configure your new MCP server project after creating it from the template.
 
 ## Step 1: Update Project Metadata
 
-After creating your project from the template, customize the `pyproject.toml` file with your project details:
+After creating your project from the template, customize the `pyproject.toml` file with your MCP server details:
 
 ```toml title="pyproject.toml"
 [project]
-name = "your-project-name"  # ← Update this
+name = "your-mcp-server"  # ← Update this
 version = "0.1.0"  # ← Set initial version
-description = "Your project description"  # ← Update this
+description = "Your MCP server description"  # ← Update this
 authors = [{ name = "Your Name", email = "your.email@example.com" }]  # ← Update this
 requires-python = ">=3.12,<4.0"
 readme = "README.md"
 license = { file = "LICENSE" }
-keywords = ["your", "project", "keywords"]  # ← Add relevant keywords
+keywords = ["mcp", "server", "ai", "model-context-protocol"]  # ← Add relevant keywords
 ```
 
 ## Step 2: Set Up Development Environment
@@ -53,72 +53,92 @@ uv run pre-commit install
 uv run pre-commit run --all-files
 ```
 
-## Step 3: Customize Project Structure
+## Step 3: Configure Your MCP Server
 
-### Update README.md
+### Set Up Environment Configuration
 
-Replace the template placeholders in `README.md`:
+Copy the example environment file and configure your MCP server:
 
-```markdown title="README.md"
-# Your Project Name
-
-## Overview
-Brief description of what your project does
-
-## Installation
-pip install your-package-name
-# or
-uv add your-package-name
-
-## Quick Start
-```python
-from your_project import main_function
-
-result = main_function()
-print(result)
+```bash
+# Copy the example environment file
+cp .env.example .env
 ```
 
-Replace `<you lib name>` placeholders with your actual project name.
+Edit the `.env` file with your MCP server configuration:
 
-### Add Your Source Code
+```bash title=".env"
+# =============================================================================
+# API Configuration
+# =============================================================================
+
+# API authentication token (required for most operations)
+API_TOKEN=your_mcp_server_token_here
+
+# =============================================================================
+# Server Configuration
+# =============================================================================
+
+# Server host address (default: 127.0.0.1)
+# Use 0.0.0.0 to bind to all interfaces (accessible from other machines)
+# Use 127.0.0.1 to bind only to localhost (only accessible from this machine)
+HOST=127.0.0.1
+
+# Server port number (default: 8000)
+PORT=8000
+
+# Logging level (default: info)
+# Available levels: debug, info, warning, error, critical
+LOG_LEVEL=info
+
+# MCP transport protocol (default: sse)
+# Available transports: sse, http-streaming
+TRANSPORT=sse
+
+# =============================================================================
+# CORS Configuration
+# =============================================================================
+
+# CORS allowed origins (default: ["*"])
+# For development, you might want: ["http://localhost:3000", "http://localhost:8080"]
+# For production, use specific domains: ["https://yourdomain.com"]
+CORS_ALLOW_ORIGINS=["*"]
+```
+
+### Understanding MCP Server Modes
+
+Your MCP server supports two main modes:
 
 <Tabs>
-<TabItem value="package" label="Package Structure">
+<TabItem value="standalone" label="Standalone Mode">
+
+**Standalone Mode**: Runs only the MCP server
 
 ```bash
-# Create your main package
-mkdir src/your_project_name
-touch src/your_project_name/__init__.py
-touch src/your_project_name/main.py
+# Run standalone MCP server with SSE transport
+python -m src.entry --transport sse --port 8000
 
-# Example main.py content
-echo 'def hello_world():
-    return "Hello from your project!"
-
-if __name__ == "__main__":
-    print(hello_world())' > src/your_project_name/main.py
+# Run with HTTP streaming transport
+python -m src.entry --transport http-streaming --port 8000
 ```
+
+**Use Case**: When you only need MCP protocol functionality
 
 </TabItem>
-<TabItem value="module" label="Single Module">
+<TabItem value="integrated" label="Integrated Mode">
+
+**Integrated Mode**: Runs both MCP server and webhook server
 
 ```bash
-# Create a single module
-touch src/your_module.py
-
-# Example module content
-echo 'def main():
-    """Main function of your project."""
-    print("Welcome to your new project!")
-
-if __name__ == "__main__":
-    main()' > src/your_module.py
+# Run integrated server (MCP + webhook)
+python -m src.entry --integrated --transport sse --port 8000
 ```
+
+**Use Case**: When you need both MCP protocol and webhook endpoints
 
 </TabItem>
 </Tabs>
 
-## Step 4: Development Workflow
+## Step 4: MCP Server Development Workflow
 
 ### Running Tests
 
@@ -130,7 +150,7 @@ uv run pytest
 uv run pytest --cov=src --cov-report=html
 
 # Run specific test file
-uv run pytest test/unit_test/test_example.py
+uv run pytest test/unit_test/test_models.py
 ```
 
 ### Code Quality Checks
@@ -139,8 +159,8 @@ uv run pytest test/unit_test/test_example.py
 # Format code with black
 uv run black src/ test/
 
-# Lint code with pylint
-uv run pylint src/
+# Lint code with ruff
+uv run ruff check src/ test/
 
 # Type checking with mypy
 uv run mypy src/
@@ -148,6 +168,47 @@ uv run mypy src/
 # Run all pre-commit hooks
 uv run pre-commit run --all-files
 ```
+
+### Testing Your MCP Server
+
+<Tabs>
+<TabItem value="health-check" label="Health Check">
+
+```bash
+# Start your MCP server
+python -m src.entry --transport sse --port 8000
+
+# Test health endpoint in another terminal
+curl http://localhost:8000/health
+```
+
+Expected response:
+```json
+{"status": "healthy", "timestamp": "2024-01-01T12:00:00Z"}
+```
+
+</TabItem>
+<TabItem value="sse-endpoint" label="SSE Endpoint">
+
+```bash
+# Test MCP SSE endpoint
+curl http://localhost:8000/sse
+```
+
+This should return Server-Sent Events stream headers.
+
+</TabItem>
+<TabItem value="http-streaming" label="HTTP Streaming">
+
+```bash
+# Test MCP HTTP streaming endpoint
+curl http://localhost:8000/mcp
+```
+
+This should return HTTP streaming response.
+
+</TabItem>
+</Tabs>
 
 ### Adding Dependencies
 
@@ -246,46 +307,59 @@ uv run mkdocs serve
 uv run mkdocs build
 ```
 
-## Step 7: Final Setup
+## Step 7: Final MCP Server Setup
 
 ### Initialize Git Repository
 
 ```bash
 # If you used Method 2 (manual setup) from installation
 git add .
-git commit -m "Initial commit from Python UV template"
+git commit -m "Initial commit from MCP Server template"
 
 # Connect to remote repository
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-PROJECT.git
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-MCP-SERVER.git
 git push -u origin main
 ```
 
 ### Clean Up Template References
 
 1. Remove or update template-specific files you don't need
-2. Update documentation to reflect your project
+2. Update documentation to reflect your MCP server
 3. Customize GitHub issue templates in `.github/ISSUE_TEMPLATE/`
 
-## Running Your Project
+## Running Your MCP Server
 
 After customization, test that everything works:
 
 ```bash
-# Run your main module
-uv run python -m src.your_project_name
+# Run your MCP server with default settings
+python -m src.entry
 
-# Or run directly
-uv run python src/your_project_name/main.py
+# Run with specific transport and port
+python -m src.entry --transport sse --port 8000
 
-# Install in editable mode for development
-uv sync --dev
+# Run in integrated mode with debug logging
+python -m src.entry --integrated --log-level debug --reload
 ```
 
-🎉 **Congratulations!** Your Python project with uv management is now ready for development!
+### Verify MCP Server Functionality
+
+```bash
+# Test all endpoints
+curl http://localhost:8000/health  # Health check
+curl http://localhost:8000/sse      # SSE transport
+curl http://localhost:8000/mcp      # HTTP streaming
+
+# Check server logs for proper MCP protocol handling
+```
+
+🎉 **Congratulations!** Your MCP server with uv management is now ready for development!
 
 ## Next Steps
 
 - Set up your IDE/editor with Python and uv support
 - Configure additional development tools as needed  
-- Start building your amazing Python project!
+- Start building your MCP server functionality!
 - Consider setting up automated releases using the included GitHub Actions
+- Add your custom MCP tools and resources to the server
+- Test with actual MCP clients to ensure protocol compliance
