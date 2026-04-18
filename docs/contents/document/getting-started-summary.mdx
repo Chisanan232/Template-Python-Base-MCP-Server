@@ -1,0 +1,372 @@
+---
+id: getting-started-summary
+title: Getting Started Summary
+sidebar_position: 0
+---
+
+# Getting Started with MCP Server Template
+
+Welcome to the MCP Server Template! This document provides a quick overview of what this template offers and how to get started.
+
+## What is This Template?
+
+The **MCP Server Template** is a production-ready Python project template for building Model Context Protocol (MCP) servers. It combines:
+
+- **MCP Server**: FastMCP-based server for tool implementation
+- **Web Server**: FastAPI-based HTTP API with health checks
+- **Integration Layer**: Unified server combining both MCP and web functionality
+- **Modern Tooling**: uv package management, pytest testing, type checking, and more
+
+## Key Features
+
+✅ **Multiple Transport Modes**: SSE, HTTP Streaming, and Stdio support  
+✅ **Modular Architecture**: Clean separation of concerns with MCP, Web, and Integration layers  
+✅ **Type Safety**: Full type hints and Pydantic validation  
+✅ **Comprehensive Testing**: Unit and integration tests with pytest  
+✅ **Production Ready**: Docker support, health checks, monitoring  
+✅ **Well Documented**: Extensive documentation and examples  
+
+## Quick Start (5 Minutes)
+
+### 1. Install Dependencies
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and setup project
+git clone <repository-url>
+cd mcp-server-template
+uv sync
+```
+
+### 2. Run the Server
+
+```bash
+# Run integrated server (MCP + Web API)
+uv run python -m src.entry --integrated
+
+# Server will be available at:
+# - API Docs: http://localhost:8000/docs
+# - Health Check: http://localhost:8000/health
+# - MCP Endpoint: http://localhost:8000/mcp
+```
+
+### 3. Test the Server
+
+```bash
+# In another terminal, test health endpoint
+curl http://localhost:8000/health
+
+# Expected response:
+# {"status": "healthy", "timestamp": "...", "version": "0.1.0"}
+```
+
+## Project Structure Overview
+
+```
+src/
+├── models/              # Domain models and DTOs
+├── mcp/                 # MCP server implementation
+│   ├── app.py          # MCP factory and server
+│   ├── tools/          # Tool implementations
+│   └── models/         # Tool input/output models
+├── web_server/         # FastAPI web server
+│   ├── app.py          # Web server factory
+│   ├── routers/        # API endpoints
+│   └── models/         # Request/response models
+└── integrate/          # Integration layer
+    └── app.py          # Integrated server factory
+```
+
+## Common Tasks
+
+### Adding a Custom Tool
+
+1. **Create input/output models** in `src/mcp/models/input/` and `src/mcp/models/output/`
+2. **Implement tool** in `src/mcp/tools/`
+3. **Register tool** by importing in `src/mcp/__init__.py`
+4. **Test tool** with pytest
+
+See [Examples & Tutorials](./examples.mdx) for detailed examples.
+
+### Adding a Custom API Endpoint
+
+1. **Create request/response models** in `src/web_server/models/request/` and `src/web_server/models/response/`
+2. **Create router** in `src/web_server/routers/`
+3. **Register router** with web server
+4. **Test endpoint** with pytest
+
+See [Usage Guide](./usage-guide.mdx) for detailed instructions.
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=html
+
+# Run specific test
+uv run pytest test/unit_test/mcp/test_calculator.py -v
+```
+
+### Deploying to Production
+
+```bash
+# Build Docker image
+docker build -t my-mcp-server .
+
+# Run container
+docker run -p 8000:8000 my-mcp-server
+
+# Or use Docker Compose
+docker-compose up -d
+```
+
+See [Deployment Guide](./deployment.mdx) for detailed deployment instructions.
+
+## Documentation Structure
+
+### For Getting Started
+- **[Quick Start](./quick-start/index.mdx)**: Step-by-step setup guide
+- **[Requirements](./quick-start/requirements.mdx)**: System prerequisites
+- **[Installation](./quick-start/installation.mdx)**: Project creation and setup
+- **[How to Run](./quick-start/how-to-run.mdx)**: Customization and running
+
+### For Understanding the Project
+- **[Architecture Overview](./architecture.mdx)**: Design patterns and component interactions
+- **[Usage Guide](./usage-guide.mdx)**: How to use the server and add custom functionality
+- **[Examples & Tutorials](./examples.mdx)**: Practical examples with complete code
+
+### For Deployment and Operations
+- **[Deployment Guide](./deployment.mdx)**: Docker, cloud platforms, production setup
+- **[Best Practices](./best-practices.mdx)**: Code organization, testing, security, monitoring
+
+### For Reference
+- **[API References](./api-references/)**: Complete API documentation
+
+## Running Different Server Modes
+
+### Standalone MCP Server
+
+```bash
+# Run with SSE transport (default)
+uv run python -m src.entry --mcp-transport sse
+
+# Run with HTTP streaming
+uv run python -m src.entry --mcp-transport streamable-http
+
+# Run with stdio
+uv run python -m src.entry --mcp-transport stdio
+```
+
+### Web Server Only
+
+```bash
+# Run web server with health check and API endpoints
+uv run python -m src.entry --web-only
+```
+
+### Integrated Server (Recommended)
+
+```bash
+# Run both MCP and web server together
+uv run python -m src.entry --integrated
+
+# With custom settings
+uv run python -m src.entry --integrated --port 8001 --mcp-mount-path /api/mcp
+```
+
+## Configuration
+
+### Environment Variables
+
+Create `.env` file:
+
+```bash
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+LOG_LEVEL=INFO
+CORS_ALLOW_ORIGINS=["http://localhost:3000"]
+```
+
+### Using Configuration in Code
+
+```python
+from src.config import get_settings
+
+settings = get_settings()
+print(settings.server_port)
+print(settings.log_level)
+```
+
+## Development Workflow
+
+### 1. Make Changes
+
+```bash
+# Edit source code
+# Add new tools, endpoints, or models
+```
+
+### 2. Test Changes
+
+```bash
+# Run tests
+uv run pytest
+
+# Check code quality
+uv run black src/
+uv run pylint src/
+uv run mypy src/
+```
+
+### 3. Run Server
+
+```bash
+# Start development server
+uv run python -m src.entry --integrated
+
+# Server auto-reloads on code changes
+```
+
+### 4. Commit Changes
+
+```bash
+# Stage changes
+git add .
+
+# Commit with clear message
+git commit -m "feat: Add new calculator tool"
+
+# Push to repository
+git push origin feature/add-calculator-tool
+```
+
+## Accessing API Documentation
+
+When running the server, access interactive API documentation:
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+These automatically document all endpoints and models.
+
+## Troubleshooting
+
+### Port Already in Use
+
+```bash
+# Use different port
+uv run python -m src.entry --integrated --port 8001
+```
+
+### Import Errors
+
+```bash
+# Reinstall dependencies
+uv sync
+```
+
+### Tests Failing
+
+```bash
+# Run tests with verbose output
+uv run pytest -v
+
+# Run specific test
+uv run pytest test/unit_test/mcp/test_calculator.py -v
+```
+
+## Next Steps
+
+1. **Explore Examples**: Check [Examples & Tutorials](./examples.mdx) for practical examples
+2. **Understand Architecture**: Read [Architecture Overview](./architecture.mdx) for design details
+3. **Add Custom Tools**: Follow [Usage Guide](./usage-guide.mdx) to add your own tools
+4. **Deploy**: Use [Deployment Guide](./deployment.mdx) for production deployment
+5. **Follow Best Practices**: Review [Best Practices](./best-practices.mdx) for code quality
+
+## Getting Help
+
+- **Documentation**: Check the relevant guide for your task
+- **Examples**: Look at practical examples in [Examples & Tutorials](./examples.mdx)
+- **Issues**: Report bugs or request features on GitHub
+- **Discussions**: Join community discussions on GitHub
+
+## Key Concepts
+
+### MCP (Model Context Protocol)
+
+MCP is a protocol for connecting AI models to tools and data sources. This template helps you build MCP servers that expose tools to AI models.
+
+### Tools
+
+Tools are functions that MCP clients can call. Each tool has:
+- **Input Model**: Defines parameters and validation
+- **Output Model**: Defines return value structure
+- **Implementation**: The actual function logic
+
+### Transports
+
+MCP supports different communication protocols:
+- **SSE**: Server-Sent Events (unidirectional)
+- **HTTP Streaming**: Bidirectional HTTP streaming
+- **Stdio**: Standard input/output
+
+### Web Server
+
+The integrated web server provides:
+- **Health Checks**: Monitor server status
+- **API Endpoints**: Custom HTTP endpoints
+- **CORS Support**: Cross-origin requests
+- **API Documentation**: Automatic Swagger/ReDoc docs
+
+## Architecture at a Glance
+
+```
+┌─────────────────────────────────────────────────┐
+│         MCP Client / Web Client                  │
+└────────────────┬────────────────────────────────┘
+                 │
+         ┌───────┴────────┐
+         │                │
+    ┌────▼────┐      ┌────▼────┐
+    │   MCP   │      │   Web   │
+    │ Transports     │  API    │
+    └────┬────┘      └────┬────┘
+         │                │
+         └────────┬───────┘
+                  │
+         ┌────────▼────────┐
+         │  Integrated App │
+         │   (FastAPI)     │
+         └────────┬────────┘
+                  │
+         ┌────────▼────────┐
+         │  Tools & Logic  │
+         │  (Your Code)    │
+         └─────────────────┘
+```
+
+## Performance Tips
+
+- Use async endpoints for I/O-bound operations
+- Implement caching for expensive computations
+- Use connection pooling for databases
+- Monitor with health checks and metrics
+- Scale horizontally with load balancers
+
+## Security Considerations
+
+- Always validate input with Pydantic models
+- Use environment variables for sensitive data
+- Configure CORS appropriately
+- Implement authentication if needed
+- Use HTTPS in production
+- Keep dependencies updated
+
+---
+
+**Ready to build your MCP server?** Start with the [Quick Start Guide](./quick-start/index.mdx)!

@@ -1,0 +1,329 @@
+---
+id: troubleshooting
+title: Troubleshooting
+sidebar_position: 8
+---
+
+# MCP Server Troubleshooting Guide
+
+This guide helps you resolve common issues when setting up and running your MCP server.
+
+## Common Issues and Solutions
+
+### Installation and Setup Issues
+
+#### Issue: uv command not found
+
+**Problem**: `bash: uv: command not found`
+
+**Solution**: Install uv package manager:
+
+```bash
+# macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+#### Issue: Python version compatibility
+
+**Problem**: `Python version too old` or `requires Python >=3.12`
+
+**Solution**: Install Python 3.12 or higher:
+
+```bash
+# Check current Python version
+python --version
+
+# Install Python 3.13 (recommended)
+# macOS
+brew install python@3.13
+
+# Ubuntu/Debian
+sudo apt update
+sudo apt install python3.13 python3.13-venv
+
+# Windows
+# Download from python.org
+```
+
+#### Issue: Dependency installation fails
+
+**Problem**: `uv sync` fails with dependency conflicts
+
+**Solution**: Try these steps:
+
+```bash
+# Clear cache and retry
+uv cache clean
+uv sync
+
+# If still failing, try with --refresh
+uv sync --refresh
+
+# Check for conflicting Python versions
+uv python list
+```
+
+### Server Startup Issues
+
+#### Issue: Port already in use
+
+**Problem**: `OSError: [Errno 98] Address already in use`
+
+**Solution**: Change the port or kill the existing process:
+
+```bash
+# Use a different port
+python -m src.entry --port 8001
+
+# Find and kill process using the port
+lsof -ti:8000 | xargs kill -9  # macOS/Linux
+
+# Windows
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+```
+
+#### Issue: Environment variables not loaded
+
+**Problem**: Configuration values are None or default
+
+**Solution**: Check your `.env` file:
+
+```bash
+# Verify .env file exists
+ls -la .env
+
+# Check file permissions
+chmod 600 .env
+
+# Test environment loading
+uv run python -c "from src.config import get_settings; print(get_settings())"
+```
+
+#### Issue: MCP server fails to start
+
+**Problem**: Server crashes on startup with import errors
+
+**Solution**: Check dependencies and imports:
+
+```bash
+# Verify all dependencies are installed
+uv sync --verbose
+
+# Check for import issues
+uv run python -c "from src.entry import main; print('Imports OK')"
+
+# Run with debug logging
+python -m src.entry --log-level debug
+```
+
+### Development Issues
+
+#### Issue: Pre-commit hooks fail
+
+**Problem**: `pre-commit run --all-files` fails
+
+**Solution**: Check each hook individually:
+
+```bash
+# Run hooks individually to identify the issue
+uv run black --check src/ test/
+uv run ruff check src/ test/
+uv run mypy src/
+uv run pytest
+
+# Fix formatting issues
+uv run black src/ test/
+
+# Fix linting issues
+uv run ruff check --fix src/ test/
+```
+
+#### Issue: Tests fail with import errors
+
+**Problem**: `ModuleNotFoundError: No module named 'src'`
+
+**Solution**: Ensure proper test execution:
+
+```bash
+# Run tests from project root
+uv run pytest
+
+# Run with explicit path
+uv run pytest test/unit_test/
+
+# Check PYTHONPATH
+uv run python -c "import sys; print(sys.path)"
+```
+
+### MCP Protocol Issues
+
+#### Issue: MCP client cannot connect
+
+**Problem**: Connection refused or timeout errors
+
+**Solution**: Check server status and configuration:
+
+```bash
+# Verify server is running
+curl http://localhost:8000/health
+
+# Check server logs for errors
+python -m src.entry --log-level debug
+
+# Test with different transport
+python -m src.entry --transport http-streaming
+```
+
+#### Issue: CORS errors in browser
+
+**Problem**: `Access-Control-Allow-Origin` errors
+
+**Solution**: Update CORS configuration:
+
+```bash
+# Edit .env file
+CORS_ALLOW_ORIGINS=["http://localhost:3000", "http://localhost:8080"]
+
+# Restart server with new config
+python -m src.entry
+```
+
+### Performance Issues
+
+#### Issue: Server response is slow
+
+**Problem**: High latency or timeouts
+
+**Solution**: Check system resources and configuration:
+
+```bash
+# Check system resources
+top  # macOS/Linux
+tasklist  # Windows
+
+# Monitor server logs
+python -m src.entry --log-level debug
+
+# Test with different logging levels
+python -m src.entry --log-level warning
+```
+
+## Debugging Tips
+
+### Enable Debug Logging
+
+```bash
+# Run with maximum debug information
+python -m src.entry --log-level debug --reload
+```
+
+### Check Configuration
+
+```python
+# Test configuration loading
+from src.config import get_settings
+settings = get_settings()
+print(f"Host: {settings.host}")
+print(f"Port: {settings.port}")
+print(f"Transport: {settings.transport}")
+```
+
+### Test Individual Components
+
+```bash
+# Test configuration only
+uv run python -c "from src.config import get_settings; print(get_settings())"
+
+# Test imports only
+uv run python -c "from src.entry import main; print('Imports successful')"
+
+# Test server factory
+uv run python -c "from src.mcp.app import mcp_factory; print('Factory OK')"
+```
+
+## Getting Help
+
+### Check Logs
+
+Always check the server logs first - they often contain detailed error information:
+
+```bash
+# Run with verbose logging
+python -m src.entry --log-level debug 2>&1 | tee server.log
+```
+
+### Common Log Messages
+
+- `INFO: Starting MCP server` - Normal startup
+- `ERROR: Failed to load configuration` - Check .env file
+- `WARNING: Port already in use` - Change port or kill process
+- `DEBUG: MCP client connected` - Client connection successful
+
+### Community Support
+
+If you're still stuck:
+
+1. **Check the GitHub Issues** - Your problem might already be solved
+2. **Search the Documentation** - Look for related topics
+3. **Create a Minimal Reproducible Example** - Help others help you
+4. **Include System Information** - Python version, OS, uv version
+
+### Reporting Bugs
+
+When reporting bugs, include:
+
+```bash
+# System information
+python --version
+uv --version
+uname -a  # macOS/Linux
+
+# Project information
+uv run python -c "import sys; print(sys.version)"
+uv run python -c "from src.config import get_settings; print(get_settings())"
+
+# Error reproduction
+# Exact commands you ran
+# Full error message
+# Expected vs actual behavior
+```
+
+## Performance Optimization
+
+### Memory Usage
+
+```bash
+# Monitor memory usage
+python -m src.entry &
+PID=$!
+ps aux | grep $PID
+kill $PID
+```
+
+### Startup Time
+
+```bash
+# Time server startup
+time python -m src.entry
+```
+
+### Concurrent Connections
+
+```bash
+# Test with multiple connections
+for i in {1..10}; do
+  curl http://localhost:8000/health &
+done
+wait
+```
+
+---
+
+*Still having issues? Check the [Examples](./examples.mdx) section for practical use cases or [open an issue](https://github.com/Chisanan232/Template-Python-Base-MCP-Server/issues) on GitHub.*

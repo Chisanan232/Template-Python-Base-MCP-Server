@@ -1,6 +1,6 @@
-# 📚 UV-Template Documentation
+# 📚 MCP Server Template Documentation
 
-Welcome to the documentation site for UV-Template! This site is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Welcome to the documentation site for MCP Server Template! This site is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
 ## 🗂️ Documentation Structure
 

@@ -59,6 +59,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'doc',
+      id: 'troubleshooting',
+      label: '🔧 Troubleshooting',
+    },
+    {
+      type: 'doc',
       id: 'deployment',
       label: '🚀 Deployment Guide',
     },
@@ -78,8 +83,8 @@ const sidebars: SidebarsConfig = {
       items: [
         {
           type: 'doc',
-          id: 'api-references/api-references',
-          label: '📚 API References',
+          id: 'api-references/api-references-overview',
+          label: '📚 API References Overview',
         },
       ],
     },
@@ -89,8 +94,8 @@ const sidebars: SidebarsConfig = {
       items: [
         {
           type: 'doc',
-          id: 'contribute/contribute',
-          label: '🤝 Contribute',
+          id: 'contribute/contribute-overview',
+          label: '📖 Contributing Overview',
         },
         {
           type: 'doc',

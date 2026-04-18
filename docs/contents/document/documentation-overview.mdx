@@ -1,0 +1,303 @@
+---
+id: documentation-overview
+title: Documentation Overview
+sidebar_position: 7
+---
+
+# Documentation Overview
+
+This document provides a comprehensive guide to all available documentation in this project.
+
+## Documentation Structure
+
+The documentation is organized into several sections to help you find what you need:
+
+### 📖 Introduction & Getting Started
+
+**[Introduction](./introduction.mdx)**
+- Overview of the MCP Server Template
+- Why you should use this template
+- Key features and benefits
+- Philosophy and design principles
+
+**[Getting Started Summary](./getting-started-summary.mdx)**
+- Quick 5-minute setup guide
+- Common tasks overview
+- Project structure at a glance
+- Running different server modes
+
+**[Quick Start Guide](./quick-start/index.mdx)**
+- Step-by-step setup instructions
+- Requirements and installation
+- How to customize your project
+- Verification steps
+
+### 🏗️ Understanding the Project
+
+**[Architecture Overview](./architecture.mdx)**
+- Project structure and organization
+- Core design patterns (Singleton Factory, Modular Architecture)
+- Component interactions and data flow
+- Extension points for customization
+- Testing architecture
+- Performance and security considerations
+
+**[Usage Guide](./usage-guide.mdx)**
+- How to run the server in different modes
+- Adding custom MCP tools
+- Adding custom web API endpoints
+- Configuration and customization
+- Debugging and troubleshooting
+- Performance optimization
+
+### 💡 Learning by Example
+
+**[Examples & Tutorials](./examples.mdx)**
+- Example 1: Simple Calculator Tool
+- Example 2: Text Processing API
+- Example 3: Database Query Tool
+- Example 4: Integrated Server with Multiple Tools
+- Example 5: Custom Configuration
+- Example 6: Error Handling and Validation
+
+Each example includes:
+- Complete code implementation
+- Step-by-step instructions
+- Test examples
+- Running and testing instructions
+
+### 🚀 Deployment & Operations
+
+**[Deployment Guide](./deployment.mdx)**
+- Local development setup
+- Docker containerization
+- Docker Compose orchestration
+- Cloud deployment (AWS ECS, Google Cloud Run, Heroku)
+- Production configuration
+- Monitoring and logging
+- Scaling strategies
+- Backup and recovery
+- Troubleshooting deployment issues
+
+### ✨ Code Quality & Best Practices
+
+**[Best Practices Guide](./best-practices.mdx)**
+- Code organization and structure
+- Naming conventions
+- Type safety and type hints
+- Error handling patterns
+- Testing strategies (unit, integration, coverage)
+- Documentation standards
+- Performance optimization techniques
+- Security best practices
+- Version control workflows
+- CI/CD configuration
+- Pre-commit checklist
+
+### 📚 API References
+
+**[API References](./api-references/)**
+- Complete API documentation
+- Endpoint specifications
+- Model definitions
+- Error codes and responses
+
+## Quick Navigation Guide
+
+### I want to...
+
+**Get started quickly**
+→ Read [Getting Started Summary](./getting-started-summary.mdx)
+
+**Understand how the project works**
+→ Read [Architecture Overview](./architecture.mdx)
+
+**Add a custom tool**
+→ Follow [Usage Guide - Adding Custom MCP Tools](./usage-guide.mdx#adding-custom-mcp-tools)
+
+**Add a custom API endpoint**
+→ Follow [Usage Guide - Adding Custom Web API Endpoints](./usage-guide.mdx#adding-custom-web-api-endpoints)
+
+**See practical examples**
+→ Check [Examples & Tutorials](./examples.mdx)
+
+**Deploy to production**
+→ Read [Deployment Guide](./deployment.mdx)
+
+**Write better code**
+→ Review [Best Practices Guide](./best-practices.mdx)
+
+**Find API documentation**
+→ Check [API References](./api-references/)
+
+**Troubleshoot issues**
+→ See [Usage Guide - Common Issues](./usage-guide.mdx#common-issues)
+
+## Documentation by Role
+
+### For New Users
+
+1. Start with [Introduction](./introduction.mdx)
+2. Follow [Getting Started Summary](./getting-started-summary.mdx)
+3. Complete [Quick Start Guide](./quick-start/index.mdx)
+4. Explore [Examples & Tutorials](./examples.mdx)
+
+### For Developers
+
+1. Read [Architecture Overview](./architecture.mdx)
+2. Study [Usage Guide](./usage-guide.mdx)
+3. Review [Examples & Tutorials](./examples.mdx)
+4. Follow [Best Practices Guide](./best-practices.mdx)
+5. Check [API References](./api-references/api-references)
+
+### For DevOps/Operations
+
+1. Read [Deployment Guide](./deployment.mdx)
+2. Review [Best Practices - Monitoring](./best-practices.mdx#monitoring)
+3. Check [Architecture - Performance Considerations](./architecture.mdx#performance-considerations)
+
+### For Contributors
+
+1. Read [Best Practices Guide](./best-practices.mdx)
+2. Review [Contributing Guide](../contribute/)
+3. Check [Architecture Overview](./architecture.mdx)
+
+## Key Concepts Explained
+
+### MCP (Model Context Protocol)
+
+MCP is a protocol for connecting AI models to tools and data sources. This template helps you build MCP servers that expose tools to AI models.
+
+**Learn more:** See [Architecture Overview - MCP Server Implementation](./architecture.mdx#mcp-server-implementation)
+
+### Singleton Factory Pattern
+
+A design pattern used to ensure only one instance of a server component exists. This template uses it for MCP, Web, and Integrated servers.
+
+**Learn more:** See [Architecture Overview - Singleton Factory Pattern](./architecture.mdx#1-singleton-factory-pattern)
+
+### Transport Modes
+
+MCP supports different communication protocols:
+- **SSE (Server-Sent Events)**: Unidirectional HTTP communication
+- **HTTP Streaming**: Bidirectional HTTP streaming
+- **Stdio**: Standard input/output communication
+
+**Learn more:** See [Architecture Overview - Transport Abstraction](./architecture.mdx#3-transport-abstraction)
+
+### Pydantic Models
+
+Used for data validation and serialization. All inputs and outputs use Pydantic models for type safety.
+
+**Learn more:** See [Best Practices - Pydantic Models](./best-practices.mdx#pydantic-models)
+
+## Common Tasks and Where to Find Them
+
+| Task | Location |
+|------|----------|
+| Install and setup project | [Quick Start Guide](./quick-start/index.mdx) |
+| Run the server | [Getting Started Summary](./getting-started-summary.mdx#running-different-server-modes) |
+| Add a custom tool | [Usage Guide](./usage-guide.mdx#adding-custom-mcp-tools) |
+| Add an API endpoint | [Usage Guide](./usage-guide.mdx#adding-custom-web-api-endpoints) |
+| See working examples | [Examples & Tutorials](./examples.mdx) |
+| Configure the server | [Usage Guide - Configuration](./usage-guide.mdx#configuration-and-customization) |
+| Write tests | [Best Practices - Testing](./best-practices.mdx#testing) |
+| Deploy to production | [Deployment Guide](./deployment.mdx) |
+| Monitor the server | [Deployment Guide - Monitoring](./deployment.mdx#monitoring-and-logging) |
+| Troubleshoot issues | [Usage Guide - Troubleshooting](./usage-guide.mdx#troubleshooting) |
+| Follow code standards | [Best Practices Guide](./best-practices.mdx) |
+
+## Documentation Features
+
+### Code Examples
+
+All documentation includes practical code examples that you can copy and use directly in your project.
+
+### Step-by-Step Guides
+
+Complex tasks are broken down into clear, numbered steps that are easy to follow.
+
+### Tabs for Multiple Options
+
+When there are multiple ways to do something (e.g., different operating systems), tabs let you choose the relevant option.
+
+### Cross-References
+
+Related topics are linked together, making it easy to explore related information.
+
+### Checklists
+
+Important sections include checklists to help you verify you've completed all necessary steps.
+
+## Keeping Documentation Updated
+
+As you develop your project, keep the documentation updated:
+
+- Update README.md with project-specific information
+- Add documentation for custom tools and endpoints
+- Document any configuration changes
+- Keep deployment instructions current
+- Update examples as your project evolves
+
+## Contributing to Documentation
+
+If you find errors or have suggestions for improvements:
+
+1. Check the [Contributing Guide](../contribute/)
+2. Report issues on GitHub
+3. Submit pull requests with improvements
+4. Discuss documentation in GitHub Discussions
+
+## Documentation Standards
+
+This documentation follows these standards:
+
+- **Clear and Concise**: Avoid unnecessary jargon
+- **Practical**: Include working code examples
+- **Organized**: Logical structure with clear navigation
+- **Complete**: Cover common use cases and edge cases
+- **Accessible**: Written for developers of all levels
+- **Maintainable**: Easy to update and extend
+
+## Changelog
+
+See [Changelog](./changelog.mdx) for:
+- New features and improvements
+- Bug fixes
+- Breaking changes
+- Migration guides
+
+## Getting Help
+
+If you can't find what you're looking for:
+
+1. **Search the documentation** using the search feature
+2. **Check the examples** in [Examples & Tutorials](./examples.mdx)
+3. **Review the FAQ** (if available)
+4. **Ask on GitHub Discussions**
+5. **Report issues on GitHub Issues**
+
+## Documentation Roadmap
+
+Planned documentation improvements:
+
+- [ ] Video tutorials
+- [ ] Interactive examples
+- [ ] API client libraries documentation
+- [ ] Performance tuning guide
+- [ ] Advanced patterns and recipes
+- [ ] Troubleshooting guide expansion
+- [ ] Integration guides for popular tools
+
+## Feedback
+
+Your feedback helps us improve the documentation:
+
+- Report unclear sections
+- Suggest missing topics
+- Share what worked well
+- Propose improvements
+
+---
+
+**Happy learning!** Start with [Getting Started Summary](./getting-started-summary.mdx) if you're new to the project.

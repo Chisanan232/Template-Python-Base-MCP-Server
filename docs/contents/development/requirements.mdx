@@ -9,126 +9,105 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 ```
 
-# Development Requirements
+# MCP Server Development Requirements
 
-Before you begin contributing to Python uv project template, ensure your development environment meets these requirements.
+Before you begin contributing to the MCP Server Template, ensure your development environment meets these requirements.
 
 ## Software Prerequisites
 
 ### Required Software
 
-- **Python**: Python 3.13 or higher
+- **Python**: Python 3.12 or higher (3.13 recommended)
 - **Git**: Latest stable version
-- **pip**, **poetry** or **uv**: Latest version
-- **virtualenv** or **pyenv**: For creating isolated Python environments
+- **uv**: Latest version (critical for this project)
 
 ### Recommended Development Tools
 
 - **Visual Studio Code**, **PyCharm**, or other IDE with Python support
-- **pre-commit**: For running pre-commit hooks
-- **Docker**: For containerized testing and deployment
+- **pre-commit**: For running pre-commit hooks (included in template)
+- **Docker**: For containerized testing and deployment (optional)
 
-## Python Dependencies
+## MCP Server Dependencies
 
-The project has several dependencies that will be installed automatically when you set up the development environment:
+The MCP server template includes these key dependencies that will be installed automatically:
 
-- **FastAPI**: Web framework for API endpoints
+### Core MCP Server Stack
+- **FastAPI**: Web framework for API endpoints and MCP server
 - **Pydantic**: Data validation and settings management
-- **httpx**: HTTP client for async requests
-- **pytest**: Testing framework
-- **python-dotenv**: Environment variable management
+- **mcp**: Model Context Protocol implementation
 - **uvicorn**: ASGI server for running the application
+
+### Development Tools
+- **pytest**: Testing framework with async support
+- **pytest-cov**: Coverage reporting
+- **pytest-asyncio**: Async testing support
+- **black**: Code formatting
+- **ruff**: Fast Python linting
+- **mypy**: Static type checking
+- **pre-commit**: Pre-commit hooks management
 
 ## Development Environment Setup
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/<GitHub username>/<GitHub repo>.git
-   cd your_repo
+   git clone https://github.com/Chisanan232/Template-Python-Base-MCP-Server.git
+   cd Template-Python-Base-MCP-Server
    ```
 
-2. **Create a virtual environment**:
+2. **Install uv Package Manager** (if not already installed):
    
    <Tabs>
-     <TabItem value="virtualenv" label="virtualenv" default>
+     <TabItem value="macos" label="macOS">
      ```bash
-     python -m venv venv
-     source venv/bin/activate  # On Windows: venv\Scripts\activate
+     # Using Homebrew
+     brew install uv
+     
+     # Or using curl
+     curl -LsSf https://astral.sh/uv/install.sh | sh
      ```
 
      </TabItem>
-     <TabItem value="conda" label="conda">
+     <TabItem value="linux" label="Linux">
      ```bash
-     conda create -n your_repo python=3.13
-     conda activate your_repo
+     # Using curl
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+     
+     # Or using pip
+     pip install uv
      ```
 
      </TabItem>
-     <TabItem value="poetry" label="poetry">
-     ```bash
-     poetry shell
-     ```
-
-     </TabItem>
-     <TabItem value="uv" label="uv">
-     ```bash
-     uv venv
-     source .venv/bin/activate
+     <TabItem value="windows" label="Windows">
+     ```powershell
+     # Using PowerShell
+     powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+     
+     # Or using pip
+     pip install uv
      ```
 
      </TabItem>
    </Tabs>
 
-3. **Install development dependencies**:
-   
-   <Tabs>
-     <TabItem value="pip" label="pip" default>
-      ```bash
-      pip install -e ".[dev]"
-      ```
-
-     </TabItem>
-     <TabItem value="poetry" label="poetry">
-      ```bash
-      poetry install --with=dev
-      ```
-
-     </TabItem>
-     <TabItem value="uv" label="uv">
-      ```bash
-      uv pip install .
-      ```
-
-     </TabItem>
-   </Tabs>
+3. **Install project dependencies**:
+   ```bash
+   # Install all dependencies including dev tools
+   uv sync
+   ```
 
 4. **Set up pre-commit hooks**:
+   ```bash
+   # Install pre-commit hooks for code quality
+   uv run pre-commit install
    
-   <Tabs>
-     <TabItem value="pip" label="pip" default>
-      ```bash
-      pre-commit install
-      ```
-
-     </TabItem>
-     <TabItem value="poetry" label="poetry">
-      ```bash
-      poetry run pre-commit install
-      ```
-
-     </TabItem>
-     <TabItem value="uv" label="uv">
-      ```bash
-      uv run pre-commit install
-      ```
-
-     </TabItem>
-   </Tabs>
+   # Test pre-commit setup
+   uv run pre-commit run --all-files
+   ```
 
 5. **Create a `.env` file for local development**:
    ```bash
    cp .env.example .env
-   # Edit .env with your service API token
+   # Edit .env with your development configuration
    ```
 
 ## Next Steps

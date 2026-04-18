@@ -1,0 +1,636 @@
+---
+id: examples
+title: Examples and Tutorials
+sidebar_position: 4
+---
+
+# Examples and Tutorials
+
+This section provides practical examples demonstrating how to use the MCP server template for common use cases.
+
+## Example 1: Simple Calculator Tool
+
+A basic example showing how to create a simple calculator tool.
+
+### Step 1: Define Models
+
+**Input Model** (`src/mcp/models/input/calculator_input.py`):
+
+```python
+from pydantic import BaseModel, Field
+
+class CalculatorInput(BaseModel):
+    """Input for calculator tool."""
+    
+    expression: str = Field(
+        description="Mathematical expression to evaluate",
+        examples=["2 + 2", "sqrt(16)", "3 * 4"]
+    )
+    precision: int = Field(
+        default=2,
+        ge=0,
+        le=10,
+        description="Decimal precision for results"
+    )
+```
+
+**Output Model** (`src/mcp/models/output/calculator_output.py`):
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class CalculatorOutput(BaseModel):
+    """Output from calculator tool."""
+    
+    result: float = Field(description="Calculation result")
+    expression: str = Field(description="Original expression")
+    error: Optional[str] = Field(
+        default=None,
+        description="Error message if calculation failed"
+    )
+```
+
+### Step 2: Implement Tool
+
+**Tool Implementation** (`src/mcp/tools/calculator.py`):
+
+```python
+import math
+from src.mcp import mcp_factory
+from src.mcp.models.input.calculator_input import CalculatorInput
+from src.mcp.models.output.calculator_output import CalculatorOutput
+
+@mcp_factory.get().tool()
+def calculate(input: CalculatorInput) -> CalculatorOutput:
+    """
+    Perform mathematical calculations.
+    
+    Supports basic arithmetic and math functions.
+    """
+    try:
+        # Create safe namespace for eval
+        safe_dict = {
+            'sqrt': math.sqrt,
+            'sin': math.sin,
+            'cos': math.cos,
+            'tan': math.tan,
+            'pi': math.pi,
+            'e': math.e,
+        }
+        
+        result = eval(input.expression, {"__builtins__": {}}, safe_dict)
+        
+        return CalculatorOutput(
+            result=round(float(result), input.precision),
+            expression=input.expression
+        )
+    except Exception as e:
+        return CalculatorOutput(
+            result=0,
+            expression=input.expression,
+            error=f"Calculation error: {str(e)}"
+        )
+```
+
+### Step 3: Test the Tool
+
+**Test File** (`test/unit_test/mcp/test_calculator.py`):
+
+```python
+import pytest
+from src.mcp.models.input.calculator_input import CalculatorInput
+from src.mcp.models.output.calculator_output import CalculatorOutput
+from src.mcp.tools.calculator import calculate
+
+def test_simple_addition():
+    """Test simple addition."""
+    input_data = CalculatorInput(expression="2 + 2")
+    output = calculate(input_data)
+    
+    assert output.result == 4.0
+    assert output.error is None
+
+def test_with_precision():
+    """Test precision setting."""
+    input_data = CalculatorInput(expression="10 / 3", precision=3)
+    output = calculate(input_data)
+    
+    assert output.result == 3.333
+    assert output.error is None
+
+def test_math_functions():
+    """Test math functions."""
+    input_data = CalculatorInput(expression="sqrt(16)")
+    output = calculate(input_data)
+    
+    assert output.result == 4.0
+    assert output.error is None
+
+def test_invalid_expression():
+    """Test error handling."""
+    input_data = CalculatorInput(expression="invalid expression")
+    output = calculate(input_data)
+    
+    assert output.result == 0
+    assert output.error is not None
+```
+
+## Example 2: Text Processing API
+
+An example showing how to create a web API endpoint for text processing.
+
+### Step 1: Define Models
+
+**Request Model** (`src/web_server/models/request/text_request.py`):
+
+```python
+from pydantic import BaseModel, Field
+
+class TextProcessRequest(BaseModel):
+    """Request for text processing."""
+    
+    text: str = Field(
+        description="Text to process",
+        min_length=1,
+        max_length=10000
+    )
+    operation: str = Field(
+        description="Operation to perform",
+        pattern="^(uppercase|lowercase|reverse|word_count)$"
+    )
+```
+
+**Response Model** (`src/web_server/models/response/text_response.py`):
+
+```python
+from pydantic import BaseModel, Field
+from datetime import datetime
+
+class TextProcessResponse(BaseModel):
+    """Response from text processing."""
+    
+    original_text: str = Field(description="Original input text")
+    processed_text: str = Field(description="Processed text")
+    operation: str = Field(description="Operation performed")
+    processing_time_ms: float = Field(description="Processing time in milliseconds")
+    processed_at: datetime = Field(description="Processing timestamp")
+```
+
+### Step 2: Create Router
+
+**Router Implementation** (`src/web_server/routers/text_router.py`):
+
+```python
+import time
+from datetime import datetime
+from fastapi import APIRouter, HTTPException
+from src.web_server.models.request.text_request import TextProcessRequest
+from src.web_server.models.response.text_response import TextProcessResponse
+
+router = APIRouter(prefix="/api/text", tags=["text"])
+
+def process_text(text: str, operation: str) -> str:
+    """Process text based on operation."""
+    if operation == "uppercase":
+        return text.upper()
+    elif operation == "lowercase":
+        return text.lower()
+    elif operation == "reverse":
+        return text[::-1]
+    elif operation == "word_count":
+        return f"Word count: {len(text.split())}"
+    else:
+        raise ValueError(f"Unknown operation: {operation}")
+
+@router.post("/process", response_model=TextProcessResponse)
+async def process_text_endpoint(request: TextProcessRequest) -> TextProcessResponse:
+    """Process text with specified operation."""
+    try:
+        start_time = time.time()
+        
+        processed_text = process_text(request.text, request.operation)
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        return TextProcessResponse(
+            original_text=request.text,
+            processed_text=processed_text,
+            operation=request.operation,
+            processing_time_ms=processing_time,
+            processed_at=datetime.now()
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Text processing failed: {str(e)}"
+        )
+
+@router.get("/operations")
+async def get_operations():
+    """Get list of available operations."""
+    return {
+        "operations": [
+            "uppercase",
+            "lowercase",
+            "reverse",
+            "word_count"
+        ]
+    }
+```
+
+### Step 3: Test the Endpoint
+
+**Test File** (`test/unit_test/web_server/test_text_endpoint.py`):
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from src.web_server import web_factory
+
+@pytest.fixture
+def client():
+    web_factory.reset()
+    app = web_factory.create()
+    yield TestClient(app)
+    web_factory.reset()
+
+def test_uppercase_operation(client):
+    """Test uppercase operation."""
+    response = client.post(
+        "/api/text/process",
+        json={"text": "hello world", "operation": "uppercase"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["processed_text"] == "HELLO WORLD"
+    assert data["operation"] == "uppercase"
+
+def test_reverse_operation(client):
+    """Test reverse operation."""
+    response = client.post(
+        "/api/text/process",
+        json={"text": "hello", "operation": "reverse"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["processed_text"] == "olleh"
+
+def test_invalid_operation(client):
+    """Test invalid operation."""
+    response = client.post(
+        "/api/text/process",
+        json={"text": "hello", "operation": "invalid"}
+    )
+    
+    assert response.status_code == 422  # Validation error
+
+def test_get_operations(client):
+    """Test getting available operations."""
+    response = client.get("/api/text/operations")
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["operations"]) == 4
+```
+
+## Example 3: Database Query Tool
+
+An example showing how to create a tool that queries a database.
+
+### Step 1: Define Models
+
+**Input Model** (`src/mcp/models/input/database_input.py`):
+
+```python
+from pydantic import BaseModel, Field
+
+class DatabaseQueryInput(BaseModel):
+    """Input for database query tool."""
+    
+    query: str = Field(
+        description="SQL query to execute",
+        examples=["SELECT * FROM users LIMIT 10"]
+    )
+    limit: int = Field(
+        default=100,
+        ge=1,
+        le=1000,
+        description="Maximum number of rows to return"
+    )
+```
+
+**Output Model** (`src/mcp/models/output/database_output.py`):
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class DatabaseQueryOutput(BaseModel):
+    """Output from database query tool."""
+    
+    rows: list[dict] = Field(description="Query results")
+    row_count: int = Field(description="Number of rows returned")
+    execution_time_ms: float = Field(description="Query execution time")
+    error: Optional[str] = Field(
+        default=None,
+        description="Error message if query failed"
+    )
+```
+
+### Step 2: Implement Tool
+
+**Tool Implementation** (`src/mcp/tools/database.py`):
+
+```python
+import time
+import sqlite3
+from src.mcp import mcp_factory
+from src.mcp.models.input.database_input import DatabaseQueryInput
+from src.mcp.models.output.database_output import DatabaseQueryOutput
+
+@mcp_factory.get().tool()
+def query_database(input: DatabaseQueryInput) -> DatabaseQueryOutput:
+    """
+    Execute a database query.
+    
+    This example uses SQLite, but can be adapted for other databases.
+    """
+    try:
+        start_time = time.time()
+        
+        # Connect to database
+        conn = sqlite3.connect(':memory:')
+        cursor = conn.cursor()
+        
+        # Execute query with limit
+        query = f"{input.query} LIMIT {input.limit}"
+        cursor.execute(query)
+        
+        # Fetch results
+        columns = [description[0] for description in cursor.description]
+        rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        execution_time = (time.time() - start_time) * 1000
+        
+        conn.close()
+        
+        return DatabaseQueryOutput(
+            rows=rows,
+            row_count=len(rows),
+            execution_time_ms=execution_time
+        )
+    except Exception as e:
+        return DatabaseQueryOutput(
+            rows=[],
+            row_count=0,
+            execution_time_ms=0,
+            error=f"Query failed: {str(e)}"
+        )
+```
+
+## Example 4: Integrated Server with Multiple Tools
+
+A complete example showing how to run an integrated server with multiple tools and endpoints.
+
+### Project Structure
+
+```
+src/
+├── mcp/
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── calculator.py
+│   │   ├── text_processor.py
+│   │   └── database.py
+│   └── models/
+│       ├── input/
+│       │   ├── calculator_input.py
+│       │   ├── text_input.py
+│       │   └── database_input.py
+│       └── output/
+│           ├── calculator_output.py
+│           ├── text_output.py
+│           └── database_output.py
+├── web_server/
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── text_router.py
+│   │   └── health_router.py
+│   └── models/
+│       ├── request/
+│       │   └── text_request.py
+│       └── response/
+│           └── text_response.py
+└── entry.py
+```
+
+### Running the Integrated Server
+
+```bash
+# Start integrated server
+uv run python -m src.entry --integrated --port 8000
+
+# Server will be available at:
+# - MCP: http://localhost:8000/mcp
+# - Health: http://localhost:8000/health
+# - Text API: http://localhost:8000/api/text
+```
+
+### Testing the Server
+
+```bash
+# Test health endpoint
+curl http://localhost:8000/health
+
+# Test text processing endpoint
+curl -X POST http://localhost:8000/api/text/process \
+  -H "Content-Type: application/json" \
+  -d '{"text": "hello world", "operation": "uppercase"}'
+
+# Access API documentation
+# Swagger UI: http://localhost:8000/docs
+# ReDoc: http://localhost:8000/redoc
+```
+
+## Example 5: Custom Configuration
+
+An example showing how to extend the configuration for project-specific needs.
+
+### Extend Configuration
+
+**Custom Config** (`src/config.py`):
+
+```python
+from pydantic_settings import BaseSettings
+from typing import List
+
+class ServerConfig(BaseSettings):
+    """Extended server configuration."""
+    
+    # Standard settings
+    server_host: str = "0.0.0.0"
+    server_port: int = 8000
+    
+    # Custom settings
+    database_url: str = "sqlite:///app.db"
+    api_key: str = ""
+    allowed_origins: List[str] = ["*"]
+    max_request_size: int = 1024 * 1024  # 1MB
+    cache_ttl: int = 3600  # 1 hour
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+```
+
+### Use Configuration in Tools
+
+```python
+from src.config import get_settings
+
+@mcp_factory.get().tool()
+def protected_tool(input: MyInput) -> MyOutput:
+    """Tool that uses custom configuration."""
+    settings = get_settings()
+    
+    # Verify API key
+    if not settings.api_key:
+        return MyOutput(error="API key not configured")
+    
+    # Use database URL
+    db_url = settings.database_url
+    
+    # Implementation...
+```
+
+### Environment Configuration
+
+Create `.env` file:
+
+```bash
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+DATABASE_URL=postgresql://user:password@localhost/mydb
+API_KEY=secret-key-here
+ALLOWED_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+MAX_REQUEST_SIZE=5242880
+CACHE_TTL=7200
+```
+
+## Example 6: Error Handling and Validation
+
+An example showing best practices for error handling and input validation.
+
+### Input Validation
+
+```python
+from pydantic import BaseModel, Field, field_validator
+
+class ValidatedInput(BaseModel):
+    """Input with comprehensive validation."""
+    
+    email: str = Field(
+        description="Email address",
+        pattern=r"^[^@]+@[^@]+\.[^@]+$"
+    )
+    age: int = Field(
+        ge=0,
+        le=150,
+        description="Age in years"
+    )
+    password: str = Field(
+        min_length=8,
+        description="Password (minimum 8 characters)"
+    )
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        """Validate password strength."""
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain uppercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain digit')
+        return v
+```
+
+### Error Handling in Tools
+
+```python
+from typing import Optional
+
+class SafeToolOutput(BaseModel):
+    """Output with error handling."""
+    
+    success: bool = Field(description="Whether operation succeeded")
+    data: Optional[dict] = Field(default=None, description="Operation result")
+    error: Optional[str] = Field(default=None, description="Error message")
+    error_code: Optional[str] = Field(default=None, description="Error code")
+
+@mcp_factory.get().tool()
+def safe_tool(input: ValidatedInput) -> SafeToolOutput:
+    """Tool with comprehensive error handling."""
+    try:
+        # Validate input (Pydantic already does this)
+        
+        # Perform operation
+        result = perform_operation(input)
+        
+        return SafeToolOutput(
+            success=True,
+            data=result
+        )
+    except ValueError as e:
+        return SafeToolOutput(
+            success=False,
+            error=str(e),
+            error_code="VALIDATION_ERROR"
+        )
+    except Exception as e:
+        return SafeToolOutput(
+            success=False,
+            error=f"Unexpected error: {str(e)}",
+            error_code="INTERNAL_ERROR"
+        )
+```
+
+## Running Examples
+
+### Run All Examples
+
+```bash
+# Install dependencies
+uv sync
+
+# Run tests
+uv run pytest test/unit_test/ -v
+
+# Run integrated server with all tools
+uv run python -m src.entry --integrated
+
+# Access API documentation
+# http://localhost:8000/docs
+```
+
+### Run Specific Example
+
+```bash
+# Test calculator tool
+uv run pytest test/unit_test/mcp/test_calculator.py -v
+
+# Test text endpoint
+uv run pytest test/unit_test/web_server/test_text_endpoint.py -v
+
+# Run with specific configuration
+export DATABASE_URL="postgresql://user:password@localhost/db"
+uv run python -m src.entry --integrated
+```
+
+## Next Steps
+
+- Explore the [Architecture Overview](./architecture.mdx) for deeper understanding
+- Check the [Usage Guide](./usage-guide.mdx) for more detailed instructions
+- Review the [API References](./api-references/) for complete API documentation
