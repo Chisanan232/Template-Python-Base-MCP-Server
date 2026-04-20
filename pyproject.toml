@@ -78,7 +78,7 @@ dev = [
 pre-commit-ci = [
     "mypy>=1.20.0",
     "pre-commit>=4.3.0",
-    "ruff>=0.14.14",
+    "ruff>=0.15.11",
 ]
 
 [tool.uv]
