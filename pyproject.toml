@@ -41,7 +41,7 @@ mcp-server-template = "src.entry:main"
 mcp = [
     "fastapi>=0.116.1",
     "pydantic>=2.13.3",
-    "pydantic-settings>=2.13.1",
+    "pydantic-settings>=2.14.0",
     "uvicorn>=0.44.0",
     "mcp[cli]>=1.27.0",
     "httpx>=0.28.1",
@@ -51,7 +51,7 @@ mcp = [
 webhook = [
     "fastapi>=0.116.1",
     "pydantic>=2.13.3",
-    "pydantic-settings>=2.13.1",
+    "pydantic-settings>=2.14.0",
     "uvicorn>=0.44.0",
 ]
 
@@ -59,7 +59,7 @@ webhook = [
 all = [
     "fastapi>=0.116.0",
     "pydantic>=2.13.3",
-    "pydantic-settings>=2.13.1",
+    "pydantic-settings>=2.14.0",
     "uvicorn>=0.44.0",
     "mcp[cli]>=1.27.0",
     "httpx>=0.28.1",
