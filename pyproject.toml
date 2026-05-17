@@ -43,7 +43,7 @@ mcp = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.0",
     "uvicorn>=0.46.0",
-    "mcp[cli]>=1.27.0",
+    "mcp[cli]>=1.27.1",
     "httpx>=0.28.1",
 ]
 
@@ -61,7 +61,7 @@ all = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.0",
     "uvicorn>=0.46.0",
-    "mcp[cli]>=1.27.0",
+    "mcp[cli]>=1.27.1",
     "httpx>=0.28.1",
 ]
 
