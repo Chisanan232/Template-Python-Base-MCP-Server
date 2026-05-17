@@ -40,7 +40,7 @@ mcp-server-template = "src.entry:main"
 # MCP core feature set supports SSE/Streamable transports (but doesn't support integrated mode)
 mcp = [
     "fastapi>=0.136.1",
-    "pydantic>=2.13.3",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.14.0",
     "uvicorn>=0.46.0",
     "mcp[cli]>=1.27.0",
@@ -50,7 +50,7 @@ mcp = [
 # HTTP server support for webhook features (but doesn't support integrated mode)
 webhook = [
     "fastapi>=0.136.1",
-    "pydantic>=2.13.3",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.14.0",
     "uvicorn>=0.46.0",
 ]
@@ -58,7 +58,7 @@ webhook = [
 # Everything supported by this project
 all = [
     "fastapi>=0.136.1",
-    "pydantic>=2.13.3",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.14.0",
     "uvicorn>=0.46.0",
     "mcp[cli]>=1.27.0",
