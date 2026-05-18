@@ -42,7 +42,7 @@ mcp = [
     "fastapi>=0.136.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
-    "uvicorn>=0.46.0",
+    "uvicorn>=0.47.0",
     "mcp[cli]>=1.27.1",
     "httpx>=0.28.1",
 ]
@@ -52,7 +52,7 @@ webhook = [
     "fastapi>=0.136.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
-    "uvicorn>=0.46.0",
+    "uvicorn>=0.47.0",
 ]
 
 # Everything supported by this project
@@ -60,7 +60,7 @@ all = [
     "fastapi>=0.136.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
-    "uvicorn>=0.46.0",
+    "uvicorn>=0.47.0",
     "mcp[cli]>=1.27.1",
     "httpx>=0.28.1",
 ]
